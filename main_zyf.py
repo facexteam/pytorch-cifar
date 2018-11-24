@@ -68,7 +68,7 @@ def main():
     ])
 
     do_download = True
-    if osp.exists(osp.join(args.cifar_dir, '')):
+    if osp.exists(osp.join(args.cifar_dir, 'cifar-10-python.tar.gz')):
         do_download = False
 
     trainset = torchvision.datasets.CIFAR10(
