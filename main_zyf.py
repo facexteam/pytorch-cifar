@@ -42,12 +42,17 @@ def add_arg_parser():
     return parser
 
 
+best_acc = 0  # best test accuracy
+
+
 def main():
+    global best_acc
     parser = add_arg_parser()
     args = parser.parse_args()
+    print('===> Train settings: ')
+    print(args)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    best_acc = 0  # best test accuracy
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     step_epochs = [int(l) for l in args.lr_step_epochs.split(',')]
 
@@ -69,17 +74,18 @@ def main():
 
     do_download = True
     if osp.exists(osp.join(args.cifar_dir, 'cifar-10-python.tar.gz')):
+        print('cifar10 has already been downloaded to ', args.cifar_dir)
         do_download = False
 
     trainset = torchvision.datasets.CIFAR10(
         root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+        trainset, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
     testset = torchvision.datasets.CIFAR10(
         root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=100, shuffle=False, num_workers=2)
+        testset, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
