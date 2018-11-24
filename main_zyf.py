@@ -185,6 +185,8 @@ def main():
 
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
         scheduler.step()
+        lr = scheduler.get_lr()
+        print('---> lr=', lr)
         train(epoch)
         test(epoch)
 
