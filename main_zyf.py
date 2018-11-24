@@ -11,6 +11,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 import os
+import os.path as osp
 import argparse
 
 from models import *
@@ -20,7 +21,8 @@ from utils import progress_bar
 def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+    parser.add_argument('--resume', '-r', action='store_true',
+                        help='resume from checkpoint')
     parser.add_argument('--num-epochs', type=int, default=350,
                         help='max num of epochs')
     parser.add_argument('--lr-factor', type=float, default=0.1,
@@ -35,6 +37,8 @@ def add_arg_parser():
                         help='the batch size')
     parser.add_argument('--model-prefix', type=str, default='ckpt',
                         help='model prefix')
+    parser.add_argument('--cifar-dir', type=str, default='./data',
+                        help='path to save downloaded cifar dataset')
     return parser
 
 
@@ -53,27 +57,38 @@ def main():
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465),
+                             (0.2023, 0.1994, 0.2010)),
     ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465),
+                             (0.2023, 0.1994, 0.2010)),
     ])
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    do_download = True
+    if osp.exists(osp.join(args.cifar_dir, '')):
+        do_download = False
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+    trainset = torchvision.datasets.CIFAR10(
+        root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    testset = torchvision.datasets.CIFAR10(
+        root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=100, shuffle=False, num_workers=2)
+
+    classes = ('plane', 'car', 'bird', 'cat', 'deer',
+               'dog', 'frog', 'horse', 'ship', 'truck')
 
     # Model
     print('==> Building model..')
     # net = VGG('VGG19')
     # net = ResNet18()
-    # net = PreActResNet18()
+    net = PreActResNet18()
     # net = GoogLeNet()
     # net = DenseNet121()
     # net = ResNeXt29_2x64d()
@@ -82,7 +97,7 @@ def main():
     # net = DPN92()
     # net = ShuffleNetG2()
     # net = SENet18()
-    net = ShuffleNetV2(1)
+    # net = ShuffleNetV2(1)
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
@@ -91,15 +106,18 @@ def main():
     if args.resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
-        assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+        assert os.path.isdir(
+            'checkpoint'), 'Error: no checkpoint directory found!'
         checkpoint = torch.load('./checkpoint/ckpt.t7')
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd)
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=step_epochs, gamma=args.lr_factor)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                          momentum=args.mom, weight_decay=args.wd)
+    scheduler = optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=step_epochs, gamma=args.lr_factor)
 
     # Training
     def train(epoch):
@@ -122,7 +140,7 @@ def main():
             correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                         % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     def test(epoch):
         global best_acc
@@ -142,7 +160,7 @@ def main():
                 correct += predicted.eq(targets).sum().item()
 
                 progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                    % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                             % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
         # Save checkpoint.
         acc = 100.*correct/total
@@ -155,9 +173,9 @@ def main():
             }
             if not os.path.isdir('checkpoint'):
                 os.mkdir('checkpoint')
-            torch.save(state, './checkpoint/%s-%04d.t7' % (args.model_prefix, epoch))
+            torch.save(state, './checkpoint/%s-%04d.t7' %
+                       (args.model_prefix, epoch))
             best_acc = acc
-
 
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
         scheduler.step()
@@ -165,5 +183,5 @@ def main():
         test(epoch)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
