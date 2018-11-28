@@ -23,17 +23,17 @@ def add_arg_parser():
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
-    parser.add_argument('--num-epochs', type=int, default=350,
+    parser.add_argument('--num-epochs', type=int, default=320,
                         help='max num of epochs')
     parser.add_argument('--lr-factor', type=float, default=0.1,
                         help='the ratio to reduce lr on each step')
-    parser.add_argument('--lr-step-epochs', type=str, default='150,250',
-                        help='the epochs to reduce the lr, e.g. 150,250')
+    parser.add_argument('--lr-step-epochs', type=str, default='160,240',
+                        help='the epochs to reduce the lr, e.g. 160,240')
     parser.add_argument('--mom', type=float, default=0.9,
                         help='momentum for sgd')
-    parser.add_argument('--wd', type=float, default=5e-4,
+    parser.add_argument('--wd', type=float, default=1e-4,
                         help='weight decay for sgd')
-    parser.add_argument('--batch-size', type=int, default=128,
+    parser.add_argument('--batch-size', type=int, default=256,
                         help='the batch size')
     parser.add_argument('--model-prefix', type=str, default='ckpt',
                         help='model prefix')
@@ -94,7 +94,8 @@ def main():
     print('==> Building model..')
     # net = VGG('VGG19')
     # net = ResNet18()
-    net = PreActResNet18()
+    net = ResNet20_cifar10()
+    # net = PreActResNet18()
     # net = GoogLeNet()
     # net = DenseNet121()
     # net = ResNeXt29_2x64d()
@@ -186,7 +187,7 @@ def main():
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
         scheduler.step()
         lr = scheduler.get_lr()
-        print('---> lr=', lr)
+        print('\n---> lr=', lr[0])
         train(epoch)
         test(epoch)
 
