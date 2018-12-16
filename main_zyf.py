@@ -16,6 +16,7 @@ import argparse
 
 from models import *
 from utils import progress_bar
+import time
 
 
 def add_arg_parser():
@@ -180,6 +181,8 @@ def main():
             }
             if not os.path.isdir('checkpoint'):
                 os.mkdir('checkpoint')
+
+            time.sleep(10)
             torch.save(state, './checkpoint/%s-%04d.t7' %
                        (args.model_prefix, epoch))
             best_acc = acc

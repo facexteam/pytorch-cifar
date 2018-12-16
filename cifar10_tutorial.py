@@ -5,13 +5,13 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.nn as nn
 import numpy as np
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import torch
 import torchvision
 import torchvision.transforms as transforms
 
 
-USE_GPU = True
+USE_GPU = False
 device = None
 
 if USE_GPU:
@@ -129,7 +129,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         #print statistics
         running_loss += loss.item()
-        if i % 2000 = 1999:  # print every 2000 mini-batches
+        if i % 2000 == 1999:  # print every 2000 mini-batches
             print('[%d, %d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
@@ -144,7 +144,7 @@ if USE_GPU:
     images, labels = images.to(device), labels.to(device)
 
 # print images
-imshow(torchvision.utils.make_grids(images))
+imshow(torchvision.utils.make_grid(images))
 print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]]
                                 for j in range(test_batchsize)))
 
@@ -161,7 +161,7 @@ correct = 0
 total = 0
 
 with torch.no_grad():
-    for data in testloader():
+    for data in testloader:
         images, labels = data
         if USE_GPU:
             images, labels = images.to(device), labels.to(device)
@@ -194,4 +194,4 @@ with torch.no_grad():
 
 for i in range(num_classes):
     print('Accuracy of %5s: %2d %%' %
-          (class[i], 100*class_correct[i]/class_total[i]))
+          (classes[i], 100*class_correct[i]/class_total[i]))
