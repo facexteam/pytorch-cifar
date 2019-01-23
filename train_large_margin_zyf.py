@@ -70,9 +70,9 @@ def add_arg_parser():
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosine',
                         help='loss type: ["cosine", "a-softmax", "arcface"]')
-    parser.add_argument('--loss-scale', type=float, default=0.5,
+    parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
-    parser.add_argument('--loss-m', type=float, default=0.5,
+    parser.add_argument('--loss-m', type=float, default=0.35,
                         help='loss param: m')
     parser.add_argument('--loss-b', type=float, default=0,
                         help='loss param: b')

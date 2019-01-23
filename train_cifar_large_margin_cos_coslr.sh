@@ -15,7 +15,7 @@ python train_large_margin_zyf.py --cifar-dir ./data \
     --test-dw 4 \
     --loss-type cosine \
     --loss-scale 32 \
-    --loss-m 0.5 \
+    --loss-m 0.35 \
     --loss-b 0 \
     --model-prefix res20-cifar \
     --save-dir checkpoints-res20-cifar-lmcos-coslr-200
