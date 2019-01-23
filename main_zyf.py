@@ -36,6 +36,8 @@ def add_arg_parser():
     parser.add_argument('--lr-scheduler', default='step',
                         type=str, help='learning rate scheduler type: ["step", "cosine"]')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+    parser.add_argument('--lr-min', default=0.0, type=float,
+                        help='minimum learning rate used in cosine lr')
     parser.add_argument('--lr-factor', type=float, default=0.1,
                         help='the ratio to reduce lr on each step')
     parser.add_argument('--lr-step-epochs', type=str, default='160,240',
@@ -172,7 +174,7 @@ def main():
                           momentum=args.mom, weight_decay=args.wd)
     if args.lr_scheduler == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=args.num_epochs)
+            optimizer, T_max=args.num_epochs, eta_min=args.lr_min)
     else:
         scheduler = optim.lr_scheduler.MultiStepLR(
             optimizer, milestones=step_epochs, gamma=args.lr_factor)
