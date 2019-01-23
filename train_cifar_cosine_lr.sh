@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python main_zyf.py --cifar-dir .data \
+python main_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
     --lr-scheduler cosine \
     --lr 0.1 \
