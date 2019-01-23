@@ -3,6 +3,9 @@
 
 python main_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
+    --gpus 0 \
+    # --resume \
+    # --resume-checkpoints checkpoints/ckpt.t7 \
     --lr-scheduler cosine \
     --lr 0.1 \
     --num-epochs 320 \
