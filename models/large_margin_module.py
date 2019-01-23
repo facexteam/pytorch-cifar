@@ -32,10 +32,8 @@ class LargeMarginModule_CosineLoss(nn.Module):
 
         out_for_predict = self.linear(out)
 
-        _, max_pos = targets.max(1)
-
         for i in range(x.shape[0]):
-            out[i][max_pos[i]] -= self.m * self.scale
+            out[i][targets[i]] -= self.m * self.scale
 
         out_for_loss = self.linear(out)
 

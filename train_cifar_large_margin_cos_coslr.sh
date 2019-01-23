@@ -1,9 +1,9 @@
 #!/bin/bash
 # maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
-python train_with_large_margin_zyf.py --cifar-dir ./data \
+python train_large_margin_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
-    --gpu-ids 2 \
+    --gpu-ids 1 \
     --lr-scheduler cosine \
     --lr 0.1 \
     --num-epochs 200 \

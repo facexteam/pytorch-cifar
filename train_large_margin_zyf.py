@@ -70,7 +70,7 @@ def add_arg_parser():
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosine',
                         help='loss type: ["cosine", "a-softmax", "arcface"]')
-    parser.add_argument('--loss-s', type=float, default=0.5,
+    parser.add_argument('--loss-scale', type=float, default=0.5,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.5,
                         help='loss param: m')
@@ -256,8 +256,9 @@ def main():
 
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
+            #print('---> targets:', targets)
             optimizer.zero_grad()
-            outputs_for_loss, outputs_for_prediction = net(inputs)
+            outputs_for_loss, outputs_for_prediction = net(inputs, targets)
 
             loss = criterion(outputs_for_loss, targets)
             loss.backward()
