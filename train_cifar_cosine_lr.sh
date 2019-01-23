@@ -10,6 +10,9 @@ python main_zyf.py --cifar-dir ./data \
     --mom 0.9 \
     --wd 0.0001 \
     --batch-size 256 \
+    --data-workers 4 \
+    --test-bs 200 \
+    --test-dw 4 \    
     --model-prefix res20-cifar \
     --save-dir checkpoints-res20-cifar-coslr
     # --no-progress-bar \

@@ -49,7 +49,13 @@ def add_arg_parser():
     parser.add_argument('--wd', type=float, default=1e-4,
                         help='weight decay for sgd')
     parser.add_argument('--batch-size', type=int, default=256,
-                        help='the batch size')
+                        help='the batch size for train')
+    parser.add_argument('--data-workers', type=int, default=4,
+                        help='workers to load train data')
+    parser.add_argument('--test-bs', type=int, default=200,
+                        help='the batch size for test data')
+    parser.add_argument('--test-dw', type=int, default=4,
+                        help='workers to load test data')
     parser.add_argument('--model-prefix', type=str, default='ckpt',
                         help='model prefix')
     parser.add_argument('--cifar-dir', type=str, default='./data',
@@ -66,6 +72,18 @@ def add_arg_parser():
 def main():
     parser = add_arg_parser()
     args = parser.parse_args()
+
+    # to make 260 to 256, for example
+    args.batch_size = args.batch_size // args.data_workers * args.data_workers
+
+    if 10000 % args.test_bs != 0:
+        print("===> Must have: (10000 %% args.test_bs == 0)")
+        return
+
+    if args.test_bs % args.test_dw != 0:
+        print("===> Must have: (args.test_bs %% args.test_bs == 0)")
+        return
+
     print('===> Train settings: ')
     print(args)
 
@@ -108,12 +126,12 @@ def main():
     trainset = torchvision.datasets.CIFAR10(
         root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, num_workers=4)
+        trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.data_workers)
 
     testset = torchvision.datasets.CIFAR10(
         root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        testset, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
 
     # classes = ('plane', 'car', 'bird', 'cat', 'deer',
     #            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -324,4 +342,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
