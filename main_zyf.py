@@ -27,7 +27,7 @@ def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--net', default='resnet20_cifar',
                         type=str, help='network architeture')
-    parser.add_argument('--gpus', default='0',
+    parser.add_argument('--gpu-ids', default='0',
                         type=str, help='which GPUs to train on, set to "0,1,2" to use multiple GPUs')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
@@ -67,7 +67,17 @@ def main():
     print('===> Train settings: ')
     print(args)
 
+    gpu_ids = []
+    if ',' in args.gpu_ids:
+        gpu_ids = [int(id) for id in args.gpu_ids.split(',')]
+    else:
+        gpu_ids = [int(args.gpu_ids)]
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    if len(gpu_ids) == 1 and device == 'cuda':
+        device = 'cuda:'+str(gpu_ids[0])
+
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     step_epochs = [int(l) for l in args.lr_step_epochs.split(',')]
     best_acc = 0  # best test accuracy
@@ -137,16 +147,12 @@ def main():
     else:
         net = ResNet20_cifar10()
 
-    net = net.to(device)
-    if device == 'cuda':
-        gpu_ids = []
-        if ',' in args.gpus:
-            gpu_ids = [int(id) for id in args.gpus.split(',')]
+    if device.startswith('cuda'):
+        if len(gpu_ids) > 1:
+            net = torch.nn.DataParallel(net, device_ids=gpu_ids)
+            cudnn.benchmark = True
         else:
-            gpu_ids = [int(args.gpus)]
-
-        net = torch.nn.DataParallel(net, device_ids=gpu_ids)
-        cudnn.benchmark = True
+            net = net.to(device)
 
     if args.resume:
         if not args.resume_checkpoint:
@@ -180,7 +186,8 @@ def main():
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(device)
+
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=args.mom, weight_decay=args.wd)
     if args.lr_scheduler == 'cosine':
@@ -274,7 +281,10 @@ def main():
 
         # '{} \t {} \t {} \t {} \t {} \t {} \n'
         msg = loss_log_format.format(
-            epoch, lr, train_loss, train_acc, test_loss, test_acc)
+            epoch=epoch, lr=lr[0],
+            train_loss=train_loss, train_acc=train_acc,
+            test_loss=test_loss, test_acc=test_acc)
+
         print('====>\n' + loss_log_format + '\n' + msg + '\n')
         fp_loss.write(msg+'\n')
 

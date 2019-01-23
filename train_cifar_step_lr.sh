@@ -3,9 +3,7 @@
 
 python main_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
-    --gpus 0 \
-    # --resume \
-    # --resume-checkpoints checkpoints/ckpt.t7 \
+    --gpu-ids 0 \
     --lr-scheduler step \
     --lr 0.1 \
     --num-epochs 320 \
@@ -15,5 +13,7 @@ python main_zyf.py --cifar-dir ./data \
     --wd 0.0001 \
     --batch-size 256 \
     --model-prefix res20-cifar \
-    # --no-progress-bar \    
-    --save-dir checkpoints-res20-cifar \
+    --save-dir checkpoints-res20-cifar
+    # --no-progress-bar \
+    # --resume \
+    # --resume-checkpoints checkpoints/ckpt.t7 \
