@@ -1,4 +1,5 @@
 '''ResNet for cifar10 in PyTorch.
+@author: zhaoyafei
 
 Reference:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun

@@ -21,6 +21,10 @@ import time
 
 def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser.add_argument('--net', default='resnet20_cifar',
+                        type=str, help='network architeture')
+    parser.add_argument('--lr-scheduler', default='step',
+                        type=str, help='learning rate scheduler type: ["step", "cosine"]')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
@@ -40,6 +44,8 @@ def add_arg_parser():
                         help='model prefix')
     parser.add_argument('--cifar-dir', type=str, default='./data',
                         help='path to save downloaded cifar dataset')
+    parser.add_argument('--save-dir', type=str, default='./checkpoints',
+                        help='path to save checkpoints')
     return parser
 
 
@@ -92,20 +98,36 @@ def main():
                'dog', 'frog', 'horse', 'ship', 'truck')
 
     # Model
+    net_name = args.net.lower()
     print('==> Building model..')
-    # net = VGG('VGG19')
-    # net = ResNet18()
-    net = ResNet20_cifar10()
-    # net = PreActResNet18()
-    # net = GoogLeNet()
-    # net = DenseNet121()
-    # net = ResNeXt29_2x64d()
-    # net = MobileNet()
-    # net = MobileNetV2()
-    # net = DPN92()
-    # net = ShuffleNetG2()
-    # net = SENet18()
-    # net = ShuffleNetV2(1)
+
+    if net_name == 'VGG19'.lower():
+        net = VGG('VGG19')
+    elif net_name == 'ResNet18'.lower():
+        net = ResNet18()
+    elif net_name == 'PreActResNet18'.lower():
+        net = PreActResNet18()
+    elif net_name == 'GoogLeNet'.lower():
+        net = GoogLeNet()
+    elif net_name == 'DenseNet121'.lower():
+        net = DenseNet121()
+    elif net_name == 'ResNeXt29_2x64d'.lower():
+        net = ResNeXt29_2x64d()
+    elif net_name == 'MobileNet'.lower():
+        net = MobileNet()
+    elif net_name == 'MobileNetV2'.lower():
+        net = MobileNetV2()
+    elif net_name == 'DPN92'.lower():
+        net = DPN92()
+    elif net_name == 'ShuffleNetG2'.lower():
+        net = ShuffleNetG2()
+    elif net_name == 'SENet18'.lower():
+        net = SENet18()
+    elif net_name == 'ShuffleNetV2'.lower():
+        net = ShuffleNetV2(1)
+    else:
+        net = ResNet20_cifar10()
+
     net = net.to(device)
     if device == 'cuda':
         net = torch.nn.DataParallel(net)
@@ -124,8 +146,15 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=args.mom, weight_decay=args.wd)
-    scheduler = optim.lr_scheduler.MultiStepLR(
-        optimizer, milestones=step_epochs, gamma=args.lr_factor)
+    if args.lr_scheduler == 'cosine':
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=args.num_epochs)
+    else:
+        scheduler = optim.lr_scheduler.MultiStepLR(
+            optimizer, milestones=step_epochs, gamma=args.lr_factor)
+
+    if not osp.exists(args.save_dir):
+        os.makedirs(args.save_dir)
 
     # Training
     def train(epoch):
@@ -183,8 +212,9 @@ def main():
                 os.mkdir('checkpoint')
 
             time.sleep(10)
-            torch.save(state, './checkpoint/%s-%04d.t7' %
-                       (args.model_prefix, epoch))
+            save_name = osp.join(args.save_dir, '%s-%04d.t7' %
+                                 (args.model_prefix, epoch))
+            torch.save(state, save_name)
             best_acc = acc
 
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
