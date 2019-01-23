@@ -1,4 +1,5 @@
 #!/bin/bash
+# maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
 python main_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
@@ -11,4 +12,5 @@ python main_zyf.py --cifar-dir ./data \
     --wd 0.0001 \
     --batch-size 256 \
     --model-prefix res20-cifar \
-    --save-dir checkpoints-res20-cifar
+    # --no-progress-bar \    
+    --save-dir checkpoints-res20-cifar \

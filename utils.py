@@ -8,6 +8,7 @@ import sys
 import time
 import math
 
+import torch
 import torch.nn as nn
 import torch.nn.init as init
 
@@ -63,6 +64,7 @@ def progress_bar(current, total, msg=None):
     sys.stdout.write(' [')
     for i in range(cur_len):
         sys.stdout.write('=')
+
     sys.stdout.write('>')
     for i in range(rest_len):
         sys.stdout.write('.')
