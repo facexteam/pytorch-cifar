@@ -9,6 +9,7 @@ from shufflenet import *
 from shufflenetv2 import *
 from resnet import *
 from resnet_cifar10 import *
+from resnet_cifar10_nofc import *
 from resnext import *
 from preact_resnet import *
 from mobilenet import *
