@@ -258,7 +258,8 @@ def main():
             inputs, targets = inputs.to(device), targets.to(device)
             #print('---> targets:', targets)
             optimizer.zero_grad()
-            outputs_for_loss, outputs_for_prediction = net(inputs, targets)
+            outputs_for_loss, outputs_for_prediction = net(
+                inputs, targets, device)
 
             loss = criterion(outputs_for_loss, targets)
             loss.backward()
@@ -289,7 +290,8 @@ def main():
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 inputs, targets = inputs.to(device), targets.to(device)
-                outputs_for_loss, outputs_for_prediction = net(inputs, targets)
+                outputs_for_loss, outputs_for_prediction = net(
+                    inputs, targets, device)
 
                 loss = criterion(outputs_for_loss, targets)
 
