@@ -13,12 +13,12 @@ from .resnet import BasicBlock
 
 
 class LargeMarginModule_CosineLoss(nn.Module):
-    def __init__(self, embedding_net, num_classes=10, scale=32, m=0.5, eps=1e-5):
+    def __init__(self, embedding_net, num_classes=10, scale=32, m=0.5):
         super(LargeMarginModule_CosineLoss, self).__init__()
         self.in_planes = sum(embedding_net.output_shape)
         self.eps = eps
         self.scale = scale
-        self.m = m
+        self.m = m*scale
 
         self.embedding_net = embedding_net
         self.linear = nn.Linear(self.in_planes, num_classes)
@@ -27,13 +27,13 @@ class LargeMarginModule_CosineLoss(nn.Module):
         out = self.embedding_net(x)
 
         # do L2 normalization
-        for ele in out:
-            ele = ele / (ele.norm() + self.eps) * self.scale
-
+        # for ele in out:
+        #     ele = ele / (ele.norm() + self.eps) * self.scale
+        out = F.normalize(out, dim=1) * self.scale
         out_for_predict = self.linear(out)
 
         for i in range(x.shape[0]):
-            out[i][targets[i]] -= self.m * self.scale
+            out[i][targets[i]] -= self.m
 
         out_for_loss = self.linear(out)
 
