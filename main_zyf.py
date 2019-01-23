@@ -56,6 +56,8 @@ def add_arg_parser():
                         help='path to save downloaded cifar dataset')
     parser.add_argument('--save-dir', type=str, default='./checkpoints',
                         help='path to save checkpoints')
+    parser.add_argument('--save-thresh', type=float, default=0.9,
+                        help='save checkpoints with test acc>save_thresh')
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
     return parser
@@ -242,7 +244,7 @@ def main():
                 progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                              % (avg_loss, acc*100, correct, total))
 
-            return avg_loss, acc
+        return avg_loss, acc
 
     def test(epoch):
         net.eval()
@@ -298,10 +300,23 @@ def main():
             }
 
             time.sleep(10)
+            save_name = osp.join(args.save_dir, '%s-best.t7' %
+                                 (args.model_prefix))
+            torch.save(state, save_name)
+            best_acc = test_acc
+
+        if test_acc >= args.save_thresh:
+            print('Saving..')
+            state = {
+                'net': net.state_dict(),
+                'acc': test_acc,
+                'epoch': epoch,
+            }
+
+            time.sleep(10)
             save_name = osp.join(args.save_dir, '%s-%04d-testacc%4.2f.t7' %
                                  (args.model_prefix, epoch, test_acc*100))
             torch.save(state, save_name)
-            best_acc = test_acc
 
     fp_log.close()
     fp_loss.close()
@@ -309,3 +324,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

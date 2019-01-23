@@ -3,15 +3,15 @@
 
 python main_zyf.py --cifar-dir ./data \
     --net resnet20_cifar \
-    --gpu-ids 1 \
+    --gpu-ids 2 \
     --lr-scheduler cosine \
     --lr 0.1 \
-    --num-epochs 200 \
+    --num-epochs 320 \
     --mom 0.9 \
     --wd 0.0001 \
     --batch-size 256 \
     --model-prefix res20-cifar \
-    --save-dir checkpoints-res20-cifar-coslr
+    --save-dir checkpoints-res20-cifar-coslr-320ep
     # --no-progress-bar \
     # --resume \
     # --resume-checkpoints checkpoints/ckpt.t7 \
