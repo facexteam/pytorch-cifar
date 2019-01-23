@@ -27,6 +27,8 @@ def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--net', default='resnet20_cifar',
                         type=str, help='network architeture')
+    parser.add_argument('--gpus', default='0',
+                        type=str, help='which GPUs to train on, set to "0,1,2" to use multiple GPUs')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--resume-checkpoint', type=str,
@@ -137,7 +139,13 @@ def main():
 
     net = net.to(device)
     if device == 'cuda':
-        net = torch.nn.DataParallel(net)
+        gpu_ids = []
+        if ',' in args.gpus:
+            gpu_ids = [int(id) for id in args.gpus.split(',')]
+        else:
+            gpu_ids = [int(args.gpus)]
+
+        net = torch.nn.DataParallel(net, device_ids=gpu_ids)
         cudnn.benchmark = True
 
     if args.resume:
@@ -151,11 +159,14 @@ def main():
                 if not fn.endswith('.t7'):
                     continue
 
-                prefix, t_epoch, t_acc = fn.rsplit('-', 2)
+                splits = fn.rsplit('-', 2)
+                t_epoch = int(splits[1])
+
                 if t_epoch > epoch:
-                    t_epoch = epoch
+                    epoch = t_epoch
                     ckpt = fn
-            args.resume_checkpoint = osp.join(args.resume_checkpoint, fn)
+
+            args.resume_checkpoint = osp.join(args.resume_checkpoint, ckpt)
 
         if not osp.exists(args.resume_checkpoint):
             print("===> Resume checkpoint not found: ", args.resume_checkpoint)
