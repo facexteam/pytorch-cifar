@@ -18,6 +18,8 @@ import os
 import os.path as osp
 import argparse
 
+import numpy as np
+
 from models import *
 from utils import progress_bar
 import time
@@ -241,7 +243,7 @@ def main():
     fp_log.write("===<\n")
 
     fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc}'
+    loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc} \t {train_cos} \t {test_lcos}'
     fp_loss.write(loss_log_format + '\n')
 
     # Training
@@ -253,6 +255,11 @@ def main():
         total = 0
         avg_loss = 0
         acc = 0
+
+        cosine_sum = 0
+        angle_sum = 0
+        avg_cosine = 0
+        avg_angle = 0
 
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -271,6 +278,14 @@ def main():
             loss.backward()
             optimizer.step()
 
+            cosine_mat = outputs_for_prediction / net.scale
+            cosine_sum += cosine_mat.sum().item()
+            avg_angle /= total
+
+            angle_mat = cosine_mat.acos()
+            angle_sum += angle_mat.sum().item() * 180 / np.pi
+            avg_angle /= total
+
             train_loss += loss.item()
             _, predicted = outputs_for_prediction.max(1)
             # print('---> predicted:', predicted)
@@ -282,8 +297,8 @@ def main():
             acc = float(correct)/total
 
             if args.progress_bar:
-                progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                             % (avg_loss, acc*100, correct, total))
+                progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cos: %.3f | Avg-Angle(degree): %6.3f'
+                             % (avg_loss, acc*100, correct, total, avg_cosine, avg_angle))
 
         return avg_loss, acc
 
@@ -295,6 +310,11 @@ def main():
         avg_loss = 0
         acc = 0
 
+        cosine_sum = 0
+        angle_sum = 0
+        avg_cosine = 0
+        avg_angle = 0
+
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 inputs, targets = inputs.to(device), targets.to(device)
@@ -302,6 +322,14 @@ def main():
                     inputs, targets, device)
 
                 loss = criterion(outputs_for_loss, targets)
+
+                cosine_mat = outputs_for_prediction / net.scale
+                cosine_sum += cosine_mat.sum().item()
+                avg_angle /= total
+
+                angle_mat = cosine_mat.acos()
+                angle_sum += angle_mat.sum().item() * 180 / np.pi
+                avg_angle /= total
 
                 test_loss += loss.item()
                 _, predicted = outputs_for_prediction.max(1)
@@ -312,10 +340,10 @@ def main():
                 acc = float(correct)/total
 
                 if args.progress_bar:
-                    progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                                 % (avg_loss, acc*100, correct, total))
+                    progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cosine: %.3f | Avg-Angle(degree): %6.3f'
+                                 % (avg_loss, acc*100, correct, total, avg_cosine, avg_angle))
 
-        return avg_loss, acc
+        return avg_loss, acc,
 
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
         scheduler.step()
