@@ -241,10 +241,12 @@ def main():
     fp_log.write("===> TRAIN ARGS:\n")
     fp_log.write(str(args)+'\n')
     fp_log.write("===<\n")
+    fp_log.close()
 
     fp_loss = open(loss_fn, 'w')
     loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc} \t {train_cos} \t {test_cos} \t {train_ang} \t {test_ang}'
     fp_loss.write(loss_log_format + '\n')
+    fp_loss.flush()
 
     # Training
     def train(epoch):
@@ -397,6 +399,7 @@ def main():
 
         print('====>\n' + loss_log_format + '\n' + msg + '\n')
         fp_loss.write(msg+'\n')
+        fp_loss.flush()
 
         # Save checkpoint.
         if test_acc > best_acc:
@@ -426,7 +429,7 @@ def main():
                                  (args.model_prefix, epoch, test_acc*100))
             torch.save(state, save_name)
 
-    fp_log.close()
+    # fp_log.close()
     fp_loss.close()
 
 
