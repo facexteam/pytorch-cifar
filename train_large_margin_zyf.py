@@ -256,10 +256,16 @@ def main():
 
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            #print('---> targets:', targets)
+
+            # print('\n===> In train()\n')
+            # print('---> targets:', targets)
+
             optimizer.zero_grad()
             outputs_for_loss, outputs_for_prediction = net(
                 inputs, targets, device)
+
+            # print('---> outputs_for_loss:', outputs_for_loss)
+            # print('---> outputs_for_prediction:', outputs_for_prediction)
 
             loss = criterion(outputs_for_loss, targets)
             loss.backward()
@@ -267,6 +273,8 @@ def main():
 
             train_loss += loss.item()
             _, predicted = outputs_for_prediction.max(1)
+            # print('---> predicted:', predicted)
+
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
