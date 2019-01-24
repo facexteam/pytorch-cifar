@@ -243,7 +243,7 @@ def main():
     fp_log.write("===<\n")
 
     fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc} \t {train_cos} \t {test_lcos}'
+    loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc} \t {train_cos} \t {test_cos} \t {train_ang} \t {test_ang}'
     fp_loss.write(loss_log_format + '\n')
 
     # Training
@@ -266,6 +266,7 @@ def main():
 
             # print('\n===> In train()\n')
             # print('---> targets:', targets)
+            # print('---> targets.shape:', targets.shape)
 
             optimizer.zero_grad()
             outputs_for_loss, outputs_for_prediction = net(
@@ -278,13 +279,30 @@ def main():
             loss.backward()
             optimizer.step()
 
-            cosine_mat = outputs_for_prediction / net.scale
-            cosine_sum += cosine_mat.sum().item()
-            avg_angle /= total
+            idx_mat = targets.reshape(-1, 1)
+            # print('---> idx_mat:', idx_mat)
+            # print('---> idx_mat.shape:', idx_mat.shape)
+
+            cosine_mat = torch.gather(
+                outputs_for_prediction, 1, idx_mat) / net.scale
+            # print('---> cosine_mat:', cosine_mat)
+            # print('---> cosine_mat.shape:', cosine_mat.shape)
+            # print('---> cosine_mat.max():', cosine_mat.max())
+            # print('---> cosine_mat.min():', cosine_mat.min())
+            # print('---> cosine_mat.mean():', cosine_mat.mean())
+
+            cosine_sum += cosine_mat.mean().item()
+            avg_cosine = cosine_sum / (batch_idx + 1)
 
             angle_mat = cosine_mat.acos()
-            angle_sum += angle_mat.sum().item() * 180 / np.pi
-            avg_angle /= total
+            # print('---> angle_mat:', angle_mat)
+            # print('---> angle_mat.shape:', angle_mat.shape)
+            # print('---> angle_mat.max():', angle_mat.max())
+            # print('---> angle_mat.min():', angle_mat.min())
+            # print('---> angle_mat.mean():', angle_mat.mean())
+
+            angle_sum += angle_mat.mean().item() * 180 / np.pi
+            avg_angle = angle_sum / (batch_idx + 1)
 
             train_loss += loss.item()
             _, predicted = outputs_for_prediction.max(1)
@@ -300,7 +318,7 @@ def main():
                 progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cos: %.3f | Avg-Angle(degree): %6.3f'
                              % (avg_loss, acc*100, correct, total, avg_cosine, avg_angle))
 
-        return avg_loss, acc
+        return avg_loss, acc, avg_cosine, avg_angle
 
     def test(epoch):
         net.eval()
@@ -323,13 +341,30 @@ def main():
 
                 loss = criterion(outputs_for_loss, targets)
 
-                cosine_mat = outputs_for_prediction / net.scale
-                cosine_sum += cosine_mat.sum().item()
-                avg_angle /= total
+                idx_mat = targets.reshape(-1, 1)
+                # print('---> idx_mat:', idx_mat)
+                # print('---> idx_mat.shape:', idx_mat.shape)
+
+                cosine_mat = torch.gather(
+                    outputs_for_prediction, 1, idx_mat) / net.scale
+                # print('---> cosine_mat:', cosine_mat)
+                # print('---> cosine_mat.shape:', cosine_mat.shape)
+                # print('---> cosine_mat.max():', cosine_mat.max())
+                # print('---> cosine_mat.min():', cosine_mat.min())
+                # print('---> cosine_mat.mean():', cosine_mat.mean())
+
+                cosine_sum += cosine_mat.mean().item()
+                avg_cosine = cosine_sum / (batch_idx + 1)
 
                 angle_mat = cosine_mat.acos()
-                angle_sum += angle_mat.sum().item() * 180 / np.pi
-                avg_angle /= total
+                # print('---> angle_mat:', angle_mat)
+                # print('---> angle_mat.shape:', angle_mat.shape)
+                # print('---> angle_mat.max():', angle_mat.max())
+                # print('---> angle_mat.min():', angle_mat.min())
+                # print('---> angle_mat.mean():', angle_mat.mean())
+
+                angle_sum += angle_mat.mean().item() * 180 / np.pi
+                avg_angle = angle_sum / (batch_idx + 1)
 
                 test_loss += loss.item()
                 _, predicted = outputs_for_prediction.max(1)
@@ -343,20 +378,22 @@ def main():
                     progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cosine: %.3f | Avg-Angle(degree): %6.3f'
                                  % (avg_loss, acc*100, correct, total, avg_cosine, avg_angle))
 
-        return avg_loss, acc,
+        return avg_loss, acc, avg_cosine, avg_angle
 
     for epoch in range(start_epoch, start_epoch+args.num_epochs):
         scheduler.step()
         lr = scheduler.get_lr()
         print('\n---> lr=', lr[0])
-        train_loss, train_acc = train(epoch)
-        test_loss, test_acc = test(epoch)
+        train_loss, train_acc, train_cos, train_ang = train(epoch)
+        test_loss, test_acc, test_cos, test_ang = test(epoch)
 
         # '{} \t {} \t {} \t {} \t {} \t {} \n'
         msg = loss_log_format.format(
             epoch=epoch, lr=lr[0],
             train_loss=train_loss, train_acc=train_acc,
-            test_loss=test_loss, test_acc=test_acc)
+            test_loss=test_loss, test_acc=test_acc,
+            train_cos=train_cos, train_ang=train_ang,
+            test_cos=test_cos, test_ang=test_ang)
 
         print('====>\n' + loss_log_format + '\n' + msg + '\n')
         fp_loss.write(msg+'\n')
