@@ -49,17 +49,21 @@ class LargeMarginModule_CosineLoss(nn.Module):
         # print('---> out_for_predict[j].norm (fc_output): ',
         #       out_for_predict.norm(dim=1))
 
-        one_hot_mat = torch.zeros_like(out_for_predict)
+        if self.m > 0:
+            one_hot_mat = torch.zeros_like(out_for_predict)
 
-        # for i in range(x.shape[0]):
-        #     one_hot_mat[i][targets[i]] = self.m*self.scale
-        one_hot_mat.scatter_(1, targets.view(-1, 1), self.m*self.scale)
+            # for i in range(x.shape[0]):
+            #     one_hot_mat[i][targets[i]] = self.m*self.scale
+            one_hot_mat.scatter_(1, targets.view(-1, 1), self.m*self.scale)
 
-        print('---> one_hot_mat for twister: ', one_hot_mat)
+            print('---> one_hot_mat for twister: ', one_hot_mat)
 
-        # one_hot_mat.to(device)
+            # one_hot_mat.to(device)
 
-        out_for_loss = out_for_predict - one_hot_mat
+            out_for_loss = out_for_predict - one_hot_mat
+        else:
+            out_for_loss = out_for_predict
+
         # print('---> out_for_loss (out_for_predict after twister): ', out_for_loss)
         # print(
         #     '---> out_for_loss[j].norm (out_for_predict after twister): ',

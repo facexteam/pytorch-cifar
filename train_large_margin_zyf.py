@@ -21,7 +21,6 @@ import argparse
 import numpy as np
 
 from models import *
-from utils import progress_bar
 import time
 
 from models.large_margin_module import LargeMarginModule_CosineLoss
@@ -95,6 +94,9 @@ def main():
     if args.test_bs % args.test_dw != 0:
         print("===> Must have: (args.test_bs %% args.test_bs == 0)")
         return
+
+    if args.progress_bar:
+        from utils import progress_bar
 
     print('===> Train settings: ')
     print(args)
