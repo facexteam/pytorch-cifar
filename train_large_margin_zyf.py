@@ -186,7 +186,7 @@ def main():
             net, 10, args.loss_scale, args.loss_m)
     elif args.loss_type.lower() == 'arcface':
         net = LargeMarginModule_Arcface(
-            net, 10, args.loss_scale, args.loss_m)
+            net, 10, args.loss_scale, args.loss_m, args.loss_b)
     else:  # cosface
         net = LargeMarginModule_Cosineface(
             net, 10, args.loss_scale, args.loss_m)

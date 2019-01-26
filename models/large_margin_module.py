@@ -93,7 +93,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
 
         self.iter = 0
 
-        self.weight = Parameter(torch.Tensor(
+        self.weight = nn.Parameter(torch.Tensor(
             self.output_size, self.input_size))
         nn.init.xavier_uniform_(self.weight)
 
@@ -109,7 +109,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
             lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
         ]
 
-    def forward(self, x, targets):
+    def forward(self, x, targets, device):
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         self.iter += 1
         embedding = self.embedding_net(x)
@@ -165,16 +165,13 @@ class LargeMarginModule_Arcface(nn.Module):
 
         self.embedding_net = embedding_net
 
-        self.weight = Parameter(torch.Tensor(
+        self.weight = nn.Parameter(torch.Tensor(
             self.output_size, self.input_size))
         nn.init.xavier_uniform_(self.weight)
 
-    def forward(self, x, targets):
+    def forward(self, x, targets, device):
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         embedding = self.embedding_net(x)
-
-        self.lamb = max(self.min_lambda, self.base *
-                        (1 + self.gamma * self.iter) ** (-1 * self.power))
 
         # --------------------------- calculate cos(theta) & theta ---------------------------
         # ebd_norm = torch.norm(embedding, 2, 1)
@@ -183,7 +180,7 @@ class LargeMarginModule_Arcface(nn.Module):
         normalized_wt = F.normalize(self.weight, dim=1)
 
         cos_theta = F.linear(normalized_ebd, normalized_wt)
-        cos_theta = cos_theta.clamp(-1, 1)
+        # cos_theta = cos_theta.clamp(-1, 1)
 
         theta = cos_theta.data.acos()
 
@@ -195,7 +192,7 @@ class LargeMarginModule_Arcface(nn.Module):
         new_theta = theta + (one_hot * self.m)
 
         output_for_loss = new_theta.cos() * self.scale
-        output_for_predict = cos_theta*self.scale
+        output_for_predict = cos_theta * self.scale
 
         return output_for_loss, output_for_predict
 
@@ -224,7 +221,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
 
         self.iter = 0
 
-        self.weight = Parameter(torch.Tensor(
+        self.weight = nn.Parameter(torch.Tensor(
             self.output_size, self.input_size))
         nn.init.xavier_uniform_(self.weight)
 
@@ -238,7 +235,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
             lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
         ]
 
-    def forward(self, x, targets):
+    def forward(self, x, targets, device):
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         self.iter += 1
         embedding = self.embedding_net(x)
