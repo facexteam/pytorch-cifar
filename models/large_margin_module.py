@@ -75,6 +75,69 @@ class LargeMarginModule_Cosineface(nn.Module):
             + ', m=' + str(self.m) + ')'
 
 
+class LargeMarginModule_Arcface(nn.Module):
+    def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
+        super(LargeMarginModule_Arcface, self).__init__()
+        self.input_size = sum(embedding_net.output_shape)
+        self.output_size = output_size
+
+        self.scale = scale
+        self.m = m
+        # self.sin_m = np.sin(self.m)
+        # self.cos_m = np.cos(self.m)
+
+        self.embedding_net = embedding_net
+
+        self.weight = nn.Parameter(torch.Tensor(
+            self.output_size, self.input_size))
+        nn.init.xavier_uniform_(self.weight)
+
+    def forward(self, x, targets, device):
+        # print('===> In LargeMarginModule_Arcface.forward()')
+        # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
+        embedding = self.embedding_net(x)
+
+        # --------------------------- calculate cos(theta) & theta ---------------------------
+        # ebd_norm = torch.norm(embedding, 2, 1)
+
+        normalized_ebd = F.normalize(embedding, dim=1)
+        normalized_wt = F.normalize(self.weight, dim=1)
+
+        cos_theta = F.linear(normalized_ebd, normalized_wt)
+        # cos_theta = cos_theta.clamp(-1, 1)
+        cos_theta.requires_grad_()
+        # print('---> cos_theta:', cos_theta)
+
+        theta = cos_theta.data.acos()
+        theta.requires_grad_()
+        # print('---> theta:', theta)
+
+        # --------------------------- convert targets to one-hot ---------------------------
+        one_hot = torch.zeros_like(cos_theta)
+        one_hot.scatter_(1, targets.view(-1, 1), self.m)
+
+        # --------------------------- Calculate output ---------------------------
+        theta = theta + one_hot
+        # print('---> theta add one_hot:', theta)
+
+        output_for_loss = theta.data.cos() * self.scale
+        output_for_loss.requires_grad_()
+
+        # output_for_loss *= self.scale
+        # print('---> output_for_loss:', output_for_loss)
+
+        output_for_predict = cos_theta * self.scale
+        # print('---> output_for_predict:', output_for_predict)
+
+        return output_for_loss, output_for_predict
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(' \
+            + 'input_size=' + str(self.input_size) \
+            + ', output_size=' + str(self.output_size) \
+            + ', m=' + str(self.m) + ')'
+
+
 class LargeMarginModule_ScaledASoftmax(nn.Module):
     def __init__(self, embedding_net, output_size=10, scale=32, m=4, min_lambda=5.0):
         super(LargeMarginModule_ScaledASoftmax, self).__init__()
@@ -82,7 +145,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         self.output_size = output_size
 
         self.scale = scale
-        self.m = m
+        self.m = int(m)
 
         self.base = 1000.0
         self.gamma = 0.12
@@ -110,6 +173,8 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         ]
 
     def forward(self, x, targets, device):
+        # print('===> In LargeMarginModule_Arcface.forward()')
+
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         self.iter += 1
         embedding = self.embedding_net(x)
@@ -126,10 +191,15 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         cos_theta = F.linear(normalized_ebd, normalized_wt)
         cos_theta = cos_theta.clamp(-1, 1)
         cos_m_theta = self.mlambda[self.m](cos_theta)
+        # print('---> cos_theta:', cos_theta)
+        # print('---> cos_m_theta:', cos_m_theta)
 
         theta = cos_theta.data.acos()
+        # print('---> theta:', theta)
+
         k = (self.m * theta / np.pi).floor()
         phi_theta = ((-1.0) ** k) * cos_m_theta - 2 * k
+        # print('---> phi_theta:', phi_theta)
 
         # --------------------------- convert targets to one-hot ---------------------------
         one_hot = torch.zeros_like(cos_theta)
@@ -140,59 +210,10 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
                            (1 + self.lamb)) + cos_theta
         # output_for_loss *= ebd_norm.view(-1, 1)
         output_for_loss *= self.scale
+        # print('---> output_for_loss:', output_for_loss)
 
         output_for_predict = cos_theta*self.scale
-
-        return output_for_loss, output_for_predict
-
-    def __repr__(self):
-        return self.__class__.__name__ + '(' \
-            + 'input_size=' + str(self.input_size) \
-            + ', output_size=' + str(self.output_size) \
-            + ', m=' + str(self.m) + ')'
-
-
-class LargeMarginModule_Arcface(nn.Module):
-    def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
-        super(LargeMarginModule_Arcface, self).__init__()
-        self.input_size = sum(embedding_net.output_shape)
-        self.output_size = output_size
-
-        self.scale = scale
-        self.m = m
-        # self.sin_m = np.sin(self.m)
-        # self.cos_m = np.cos(self.m)
-
-        self.embedding_net = embedding_net
-
-        self.weight = nn.Parameter(torch.Tensor(
-            self.output_size, self.input_size))
-        nn.init.xavier_uniform_(self.weight)
-
-    def forward(self, x, targets, device):
-        # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
-        embedding = self.embedding_net(x)
-
-        # --------------------------- calculate cos(theta) & theta ---------------------------
-        # ebd_norm = torch.norm(embedding, 2, 1)
-
-        normalized_ebd = F.normalize(embedding, dim=1)
-        normalized_wt = F.normalize(self.weight, dim=1)
-
-        cos_theta = F.linear(normalized_ebd, normalized_wt)
-        # cos_theta = cos_theta.clamp(-1, 1)
-
-        theta = cos_theta.data.acos()
-
-        # --------------------------- convert targets to one-hot ---------------------------
-        one_hot = torch.zeros_like(cos_theta)
-        one_hot.scatter_(1, targets.view(-1, 1), 1)
-
-        # --------------------------- Calculate output ---------------------------
-        new_theta = theta + (one_hot * self.m)
-
-        output_for_loss = new_theta.cos() * self.scale
-        output_for_predict = cos_theta * self.scale
+        # print('---> output_for_predict:', output_for_predict)
 
         return output_for_loss, output_for_predict
 
@@ -210,7 +231,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         self.output_size = output_size
 
         # self.scale = scale
-        self.m = m
+        self.m = int(m)
 
         self.base = 1000.0
         self.gamma = 0.12

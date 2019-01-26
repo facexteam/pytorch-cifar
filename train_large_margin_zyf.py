@@ -182,12 +182,15 @@ def main():
     #     net = ResNet20_cifar10()
     net = ResNet20_cifar10_nofc()
     if args.loss_type.lower() == 'asoftmax':
+        print('===> Using Scaled/Normalized A-softmax loss')
         net = LargeMarginModule_ScaledASoftmax(
-            net, 10, args.loss_scale, args.loss_m)
-    elif args.loss_type.lower() == 'arcface':
-        net = LargeMarginModule_Arcface(
             net, 10, args.loss_scale, args.loss_m, args.loss_b)
+    elif args.loss_type.lower() == 'arcface':
+        print('===> Using Arcface loss')
+        net = LargeMarginModule_Arcface(
+            net, 10, args.loss_scale, args.loss_m)
     else:  # cosface
+        print('===> Using cosface loss')
         net = LargeMarginModule_Cosineface(
             net, 10, args.loss_scale, args.loss_m)
 
