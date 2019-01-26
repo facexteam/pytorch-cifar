@@ -23,7 +23,7 @@ import numpy as np
 from models import *
 import time
 
-from models.large_margin_module import LargeMarginModule_CosineLoss
+from models.large_margin_module import LargeMarginModule_Cosineface, LargeMarginModule_ScaledASoftmax, LargeMarginModule_Arcface
 
 
 def add_arg_parser():
@@ -69,8 +69,8 @@ def add_arg_parser():
                         help='save checkpoints with test acc>save_thresh')
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
-    parser.add_argument('--loss-type', type=str, default='cosine',
-                        help='loss type: ["cosine", "a-softmax", "arcface"]')
+    parser.add_argument('--loss-type', type=str, default='cosface',
+                        help='loss type: ["a-softmax", "cosface", "arcface"]')
     parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.35,
@@ -181,7 +181,15 @@ def main():
     # else:
     #     net = ResNet20_cifar10()
     net = ResNet20_cifar10_nofc()
-    net = LargeMarginModule_CosineLoss(net, 10, args.loss_scale, args.loss_m)
+    if args.loss_type.lower() == 'asoftmax':
+        net = LargeMarginModule_ScaledASoftmax(
+            net, 10, args.loss_scale, args.loss_m)
+    elif args.loss_type.lower() == 'arcface':
+        net = LargeMarginModule_Arcface(
+            net, 10, args.loss_scale, args.loss_m)
+    else:  # cosface
+        net = LargeMarginModule_Cosineface(
+            net, 10, args.loss_scale, args.loss_m)
 
     if device.startswith('cuda'):
         if len(gpu_ids) > 1:
@@ -246,7 +254,7 @@ def main():
     fp_log.close()
 
     fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch} \t {lr} \t {train_loss} \t {train_acc} \t {test_loss} \t {test_acc} \t {train_cos} \t {test_cos} \t {train_ang} \t {test_ang}'
+    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{train_acc}\t{test_loss}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}'
     fp_loss.write(loss_log_format + '\n')
     fp_loss.flush()
 
@@ -391,7 +399,7 @@ def main():
         train_loss, train_acc, train_cos, train_ang = train(epoch)
         test_loss, test_acc, test_cos, test_ang = test(epoch)
 
-        # '{} \t {} \t {} \t {} \t {} \t {} \n'
+        # '{}\t{}\t{}\t{}\t{}\t{} \n'
         msg = loss_log_format.format(
             epoch=epoch, lr=lr[0],
             train_loss=train_loss, train_acc=train_acc,
