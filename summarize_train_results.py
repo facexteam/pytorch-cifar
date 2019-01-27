@@ -43,7 +43,7 @@ def summary_by_scales(root_dir, sub_dir_template,
     failed_s_list = []
     failed_m_list = []
 
-    print('\n===> summary train results with setting s=', s)
+    print('\n===> summary train results by scales')
 
     for s in scale_list:
         print('\n===> summary train results with setting s=', s)
@@ -101,6 +101,8 @@ def summary_by_scales(root_dir, sub_dir_template,
 def summary_by_margins(root_dir, sub_dir_template,
                        scale_list, m_list,
                        save_prefix='summary'):
+    print('\n===> summary train results by scales')
+
     for m in m_list:
         print('\n===> summary train results with margins m=', m)
         save_fn = save_prefix + '_m%g.tsv.txt' % m

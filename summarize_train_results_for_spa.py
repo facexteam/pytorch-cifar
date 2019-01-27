@@ -15,7 +15,7 @@ if __name__ == '__main__':
     #scale_list = [1, 2, 4, 8, 16, 32, 64]
     scale_list = [64, 32, 16, 8, 4, 2, 1]
     # m_list = np.arange(0, 1.05, 0.05)
-    m_list = [1.5, 1.75, 1.8, 2.0, 2.5, 3.5, 4.0, 4.5, 5.0]
+    m_list = [1.5, 1.75, 1.8, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
     prefix = 'spa_summary'
 
     summary_by_margins(root_dir, sub_dir_template,
