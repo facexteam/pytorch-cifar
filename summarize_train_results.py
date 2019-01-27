@@ -7,14 +7,6 @@ import os.path as osp
 import numpy as np
 
 
-#save_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m%g'
-save_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m'
-
-#scale_list = [1, 2, 4, 8, 16, 32, 64]
-scale_list = [64, 32, 16, 8, 4, 2, 1]
-m_list = np.arange(0, 1.05, 0.05)
-
-
 def parse_log(log_fn, fp, s, m, write_head=1):
     print('---> Parsing log file: ', log_fn)
     line_cnt = 0
@@ -45,22 +37,29 @@ def parse_log(log_fn, fp, s, m, write_head=1):
     return write_head, found
 
 
-def summary_by_scales(root_dir):
+def summary_by_scales(root_dir, sub_dir_template,
+                      scale_list, m_list,
+                      save_prefix='summary'):
     failed_s_list = []
     failed_m_list = []
 
+    print('\n===> summary train results with setting s=', s)
+
     for s in scale_list:
         print('\n===> summary train results with setting s=', s)
-        save_fn = 'summary_s%d.tsv.txt' % s
+        save_fn = save_prefix + '_s%d.tsv.txt' % s
+        print('\n       save summary results into file: ', save_fn)
+
         write_head = 1
         with open(save_fn, 'w') as fp:
             for m in m_list:
-                if m == 0:
-                    _dir = (save_dir_template + '0') % (s)
-                elif m == 1:
-                    _dir = (save_dir_template + '1.0') % (s)
-                else:
-                    _dir = (save_dir_template + '%g') % (s, m)
+                # if m == 0:
+                #     _dir = (sub_dir_template + '0') % (s)
+                # elif m == 1:
+                #     _dir = (sub_dir_template + '1.0') % (s)
+                # else:
+                #     _dir = (sub_dir_template + '%g') % (s, m)
+                _dir = sub_dir_template % (s, m)
 
                 log_fn = osp.join(root_dir, _dir, 'train-loss.txt')
                 print('long_fn: ', log_fn)
@@ -99,19 +98,24 @@ def summary_by_scales(root_dir):
     print('failed_m_list: ', failed_m_str)
 
 
-def summary_by_margins(root_dir):
+def summary_by_margins(root_dir, sub_dir_template,
+                       scale_list, m_list,
+                       save_prefix='summary'):
     for m in m_list:
         print('\n===> summary train results with margins m=', m)
-        save_fn = 'summary_m%g.tsv.txt' % m
+        save_fn = save_prefix + '_m%g.tsv.txt' % m
+        print('\n       save summary results into file: ', save_fn)
+
         write_head = 1
         with open(save_fn, 'w') as fp:
             for s in scale_list:
-                if m == 0:
-                    _dir = (save_dir_template + '0') % (s)
-                elif m == 1:
-                    _dir = (save_dir_template + '1.0') % (s)
-                else:
-                    _dir = (save_dir_template + '%g') % (s, m)
+                # if m == 0:
+                #     _dir = (sub_dir_template + '0') % (s)
+                # elif m == 1:
+                #     _dir = (sub_dir_template + '1.0') % (s)
+                # else:
+                #     _dir = (sub_dir_template + '%g') % (s, m)
+                _dir = sub_dir_template % (s, m)
 
                 log_fn = osp.join(root_dir, _dir, 'train-loss.txt')
                 print('long_fn: ', log_fn)
@@ -127,6 +131,12 @@ def summary_by_margins(root_dir):
 
 if __name__ == '__main__':
     root_dir = './'
+    sub_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m%g'
+    # sub_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m'
 
-    summary_by_margins(root_dir)
-    summary_by_scales(root_dir)
+    #scale_list = [1, 2, 4, 8, 16, 32, 64]
+    scale_list = [64, 32, 16, 8, 4, 2, 1]
+    m_list = np.arange(0, 1.05, 0.05)
+
+    summary_by_margins(root_dir, sub_dir_template, scale_list, m_list)
+    summary_by_scales(root_dir, sub_dir_template, scale_list, m_list)

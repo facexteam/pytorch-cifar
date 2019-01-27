@@ -191,7 +191,7 @@ def main():
         net = LargeMarginModule_Arcface(
             net, 10, args.loss_scale, args.loss_m)
     elif args.loss_type.lower().startswith('spa'):
-        print('===> Using Arcface loss')
+        print('===> Using SPA Softmax loss')
         net = SpaSoftmax(net, 10, args.loss_scale, args.loss_m)
     else:  # cosface
         print('===> Using cosface loss')

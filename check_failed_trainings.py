@@ -7,26 +7,28 @@ import os.path as osp
 import numpy as np
 
 
-log_fn_template = 'train-log-s%d-m'
+# log_fn_template = 'train-log-s%d-m'
 
-# scale_list = [1, 2, 4, 8, 16, 32, 64]
-scale_list = [64, 32, 16, 8, 4, 2, 1]
-m_list = np.arange(0, 1.05, 0.05)
+# # scale_list = [1, 2, 4, 8, 16, 32, 64]
+# scale_list = [64, 32, 16, 8, 4, 2, 1]
+# m_list = np.arange(0, 1.05, 0.05)
 
 
-def check(root_dir):
+def check(root_dir, log_fn_template, scale_list, m_list):
     failed_m_list = []
     failed_s_list = []
 
     for s in scale_list:
         for m in m_list:
             print('\n===> summary train results with setting s=', s)
-            if m == 0:
-                log_fn = (log_fn_template + '0.txt') % (s)
-            elif m == 1.0:
-                log_fn = (log_fn_template + '1.0.txt') % (s)
-            else:
-                log_fn = (log_fn_template + '%g.txt') % (s, m)
+            # if m == 0:
+            #     log_fn = (log_fn_template + '0.txt') % (s)
+            # elif m == 1.0:
+            #     log_fn = (log_fn_template + '1.0.txt') % (s)
+            # else:
+            #     log_fn = (log_fn_template + '%g.txt') % (s, m)
+
+            log_fn = (log_fn_template) % (s, m)
 
             log_fn = osp.join(root_dir, log_fn)
             print('long_fn: ', log_fn)
@@ -71,5 +73,11 @@ def check(root_dir):
 
 if __name__ == '__main__':
     root_dir = './'
+    # log_fn_template = 'train-log-s%d-m'
+    log_fn_template = 'train-log-s%d-m%g'
 
-    check(root_dir)
+    # scale_list = [1, 2, 4, 8, 16, 32, 64]
+    scale_list = [64, 32, 16, 8, 4, 2, 1]
+    m_list = np.arange(0, 1.05, 0.05)
+
+    check(root_dir, log_fn_template, scale_list, m_list)

@@ -104,30 +104,37 @@ class LargeMarginModule_Arcface(nn.Module):
         normalized_wt = F.normalize(self.weight, dim=1)
 
         cos_theta = F.linear(normalized_ebd, normalized_wt)
-        # cos_theta = cos_theta.clamp(-1, 1)
-        cos_theta.requires_grad_()
-        # print('---> cos_theta:', cos_theta)
+        cos_theta = cos_theta.clamp(-1, 1)
 
-        theta = cos_theta.data.acos()
-        theta.requires_grad_()
+        # print('---> cos_theta:', cos_theta)
+        # print('---> cos_theta.requires_grad:', cos_theta.requires_grad)
+
+        # theta = cos_theta.data.acos()  # no grad here
+        theta = cos_theta.acos()  # theta requires grad here
+        # theta.requires_grad_()
         # print('---> theta:', theta)
+        # print('---> theta.requires_grad:', theta.requires_grad)
 
         # --------------------------- convert targets to one-hot ---------------------------
         one_hot = torch.zeros_like(cos_theta)
         one_hot.scatter_(1, targets.view(-1, 1), self.m)
 
         # --------------------------- Calculate output ---------------------------
-        theta = theta + one_hot
-        # print('---> theta add one_hot:', theta)
+        new_theta = theta + one_hot
+        # print('---> theta add one_hot:', new_theta)
+        # print('---> new_theta:', new_theta)
+        # print('---> new_theta.requires_grad:', new_theta.requires_grad)
 
-        output_for_loss = theta.data.cos() * self.scale
-        output_for_loss.requires_grad_()
+        output_for_loss = new_theta.cos() * self.scale
 
-        # output_for_loss *= self.scale
         # print('---> output_for_loss:', output_for_loss)
+        # print('---> output_for_loss.requires_grad:',
+        #       output_for_loss.requires_grad)
 
         output_for_predict = cos_theta * self.scale
         # print('---> output_for_predict:', output_for_predict)
+        # print('---> output_for_predict.requires_grad:',
+        #       output_for_predict.requires_grad)
 
         return output_for_loss, output_for_predict
 
@@ -192,10 +199,13 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         cos_theta = cos_theta.clamp(-1, 1)
         cos_m_theta = self.mlambda[self.m](cos_theta)
         # print('---> cos_theta:', cos_theta)
+        # print('---> cos_theta.requires_grad:', cos_theta.requires_grad)
         # print('---> cos_m_theta:', cos_m_theta)
+        # print('---> cos_m_theta.requires_grad:', cos_m_theta.requires_grad)
 
-        theta = cos_theta.data.acos()
+        theta = cos_theta.data.acos()  # theta does not require grad() here
         # print('---> theta:', theta)
+        # print('---> theta.requires_grad:', theta.requires_grad)
 
         k = (self.m * theta / np.pi).floor()
         phi_theta = ((-1.0) ** k) * cos_m_theta - 2 * k
@@ -208,6 +218,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         # --------------------------- Calculate output ---------------------------
         output_for_loss = (one_hot * (phi_theta - cos_theta) /
                            (1 + self.lamb)) + cos_theta
+
         # output_for_loss *= ebd_norm.view(-1, 1)
         output_for_loss *= self.scale
         # print('---> output_for_loss:', output_for_loss)
