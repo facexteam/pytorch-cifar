@@ -24,6 +24,7 @@ from models import *
 import time
 
 from models.large_margin_module import LargeMarginModule_Cosineface, LargeMarginModule_ScaledASoftmax, LargeMarginModule_Arcface
+from models.spa_softmax import SpaSoftmax
 
 
 def add_arg_parser():
@@ -70,7 +71,7 @@ def add_arg_parser():
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosface',
-                        help='loss type: ["a-softmax", "cosface", "arcface"]')
+                        help='loss type: ["a-softmax", "cosface", "arcface", "spa"]')
     parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.35,
@@ -189,6 +190,9 @@ def main():
         print('===> Using Arcface loss')
         net = LargeMarginModule_Arcface(
             net, 10, args.loss_scale, args.loss_m)
+    elif args.loss_type.lower().startswith('spa'):
+        print('===> Using Arcface loss')
+        net = SpaSoftmax(net, 10, args.loss_scale, args.loss_m)
     else:  # cosface
         print('===> Using cosface loss')
         net = LargeMarginModule_Cosineface(
