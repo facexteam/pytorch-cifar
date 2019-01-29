@@ -303,13 +303,12 @@ def main():
             # print('---> targets.shape:', targets.shape)
 
             optimizer.zero_grad()
-            outputs_for_loss, outputs_for_prediction = net(
-                inputs, targets, device)
+            outputs, cos_theta = net(inputs, targets, device)
 
-            # print('---> outputs_for_loss:', outputs_for_loss)
-            # print('---> outputs_for_prediction:', outputs_for_prediction)
+            # print('---> outputs:', outputs)
+            # print('---> cos_theta:', cos_theta)
 
-            loss = criterion(outputs_for_loss, targets)
+            loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
 
@@ -317,8 +316,7 @@ def main():
             # print('---> idx_mat:', idx_mat)
             # print('---> idx_mat.shape:', idx_mat.shape)
 
-            cosine_mat = torch.gather(
-                outputs_for_prediction, 1, idx_mat) / net.scale
+            cosine_mat = torch.gather(cos_theta, 1, idx_mat)
             # print('---> cosine_mat:', cosine_mat)
             # print('---> cosine_mat.shape:', cosine_mat.shape)
             # print('---> cosine_mat.max():', cosine_mat.max())
@@ -339,7 +337,7 @@ def main():
             avg_angle = angle_sum / (batch_idx + 1)
 
             train_loss += loss.item()
-            _, predicted = outputs_for_prediction.max(1)
+            _, predicted = cos_theta.max(1)
             # print('---> predicted:', predicted)
 
             total += targets.size(0)
@@ -370,17 +368,16 @@ def main():
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 inputs, targets = inputs.to(device), targets.to(device)
-                outputs_for_loss, outputs_for_prediction = net(
-                    inputs, targets, device)
 
-                loss = criterion(outputs_for_loss, targets)
+                outputs, cos_theta = net(inputs, targets, device)
+
+                loss = criterion(outputs, targets)
 
                 idx_mat = targets.reshape(-1, 1)
                 # print('---> idx_mat:', idx_mat)
                 # print('---> idx_mat.shape:', idx_mat.shape)
 
-                cosine_mat = torch.gather(
-                    outputs_for_prediction, 1, idx_mat) / net.scale
+                cosine_mat = torch.gather(cos_theta, 1, idx_mat)
                 # print('---> cosine_mat:', cosine_mat)
                 # print('---> cosine_mat.shape:', cosine_mat.shape)
                 # print('---> cosine_mat.max():', cosine_mat.max())
@@ -401,7 +398,7 @@ def main():
                 avg_angle = angle_sum / (batch_idx + 1)
 
                 test_loss += loss.item()
-                _, predicted = outputs_for_prediction.max(1)
+                _, predicted = cos_theta.max(1)
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
 
