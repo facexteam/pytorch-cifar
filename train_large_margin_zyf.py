@@ -71,13 +71,17 @@ def add_arg_parser():
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosface',
-                        help='loss type: ["a-softmax", "cosface", "arcface", "spa"]')
+                        help='loss type: ["a-softmax", "cosface", "arcface", "spa", "spa-v2"]')
     parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.35,
                         help='loss param: m')
-    parser.add_argument('--loss-b', type=float, default=0,
+    parser.add_argument('--loss-m2', type=float, default=1,
+                        help='loss param: m2 for spa-v2 loss')
+    parser.add_argument('--loss-b', type=float, default=1,
                         help='loss param: b')
+    parser.add_argument('--loss-lambda', type=float, default=5,
+                        help='loss param: lambda for A-softmax')
     return parser
 
 
@@ -182,17 +186,27 @@ def main():
     # else:
     #     net = ResNet20_cifar10()
     net = ResNet20_cifar10_nofc()
-    if args.loss_type.lower() == 'asoftmax':
+    loss_type = args.loss_type.lower()
+
+    if loss_type == 'asoftmax':
         print('===> Using Scaled/Normalized A-softmax loss')
         net = LargeMarginModule_ScaledASoftmax(
-            net, 10, args.loss_scale, args.loss_m, args.loss_b)
-    elif args.loss_type.lower() == 'arcface':
+            net, 10, args.loss_scale,
+            args.loss_m, args.loss_lambda)
+    elif loss_type == 'arcface':
         print('===> Using Arcface loss')
         net = LargeMarginModule_Arcface(
             net, 10, args.loss_scale, args.loss_m)
-    elif args.loss_type.lower().startswith('spa'):
-        print('===> Using SPA Softmax loss')
-        net = SpaSoftmax(net, 10, args.loss_scale, args.loss_m)
+    elif loss_type.startswith('spa'):
+        if loss_type == 'spa-v2':
+            print('===> Using SPA Softmax loss')
+            net = SpaSoftmax(net, 10, args.loss_scale,
+                             args.loss_m, args.loss_m2,
+                             args.loss_b)
+        else:
+            print('===> Using SPA Softmax loss')
+            net = SpaSoftmax(net, 10, args.loss_scale,
+                             args.loss_m, args.loss_b)
     else:  # cosface
         print('===> Using cosface loss')
         net = LargeMarginModule_Cosineface(
