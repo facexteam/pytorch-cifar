@@ -72,13 +72,13 @@ def add_arg_parser():
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosface',
-                        help='loss type: ["a-softmax", "cosface", "arcface", "spa", "spa_v2"]')
+                        help='loss type: ["a-softmax", "cosface", "arcface", "spa", "spav2"]')
     parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.35,
                         help='loss param: m')
     parser.add_argument('--loss-n', type=float, default=1,
-                        help='loss param: n for spa_v2 loss')
+                        help='loss param: n for spav2 loss')
     parser.add_argument('--loss-b', type=float, default=1,
                         help='loss param: b')
     parser.add_argument('--loss-lambda', type=float, default=5,
@@ -199,8 +199,8 @@ def main():
         net = LargeMarginModule_Arcface(
             net, 10, args.loss_scale, args.loss_m)
     elif loss_type.startswith('spa'):
-        if loss_type == 'spa_v2':
-            print('===> Using spa_v2 Softmax loss')
+        if loss_type == 'spav2':
+            print('===> Using spav2 Softmax loss')
             net = SpaSoftmax_v2(net, 10, args.loss_scale,
                                 args.loss_m, args.loss_n,
                                 args.loss_b)
@@ -303,7 +303,7 @@ def main():
             # print('---> targets.shape:', targets.shape)
 
             optimizer.zero_grad()
-            outputs, cos_theta = net(inputs, targets, device)
+            outputs, cos_theta = net(inputs, targets)
 
             # print('---> outputs:', outputs)
             # print('---> cos_theta:', cos_theta)
@@ -369,7 +369,7 @@ def main():
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 inputs, targets = inputs.to(device), targets.to(device)
 
-                outputs, cos_theta = net(inputs, targets, device)
+                outputs, cos_theta = net(inputs, targets)
 
                 loss = criterion(outputs, targets)
 
