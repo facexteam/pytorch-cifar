@@ -285,6 +285,7 @@ def main():
 
     log_fn = osp.join(args.save_dir, 'train-log.txt')
     loss_fn = osp.join(args.save_dir, 'train-loss.txt')
+    fc_fn = osp.join(args.save_dir, 'train-last-fc.txt')
 
     fp_log = open(log_fn, 'w')
     fp_log.write("===> TRAIN ARGS:\n")
@@ -293,9 +294,14 @@ def main():
     fp_log.close()
 
     fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{train_acc}\t{test_loss}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}'
+    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{train_acc}\t{test_loss}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
     fp_loss.write(loss_log_format + '\n')
     fp_loss.flush()
+
+    fp_fc = open(fc_fn, 'w')
+    fc_log_format = '{epoch}\t{avg_fc_cos_max}\t{avg_fc_ang_min}\t{fc_cos_max}\t{fc_ang_min}\t{fc_cos_mat}\t{fc_ang_mat}\t{fc_wt}'
+    fp_fc.write(fc_log_format + '\n')
+    fp_fc.flush()
 
     # Training
     def train(epoch):
@@ -435,17 +441,58 @@ def main():
         train_loss, train_acc, train_cos, train_ang = train(epoch)
         test_loss, test_acc, test_cos, test_ang = test(epoch)
 
+        fc_wt = net.get_fc_weights()
+        fc_wt_n = F.normalize(fc_wt, dim=1)
+        fc_cos_mat = fc_wt_n.mm(fc_wt_n.t())
+        fc_ang_mat = fc_cos_mat.acos() * 180 / np.pi
+
+        fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
+        fc_cos_max, pos = fc_cos_mat2.max(dim=0)
+        fc_ang_min = fc_ang_mat[pos].diag()
+
+        avg_fc_cos_max = fc_cos_max.mean().item()
+        avg_fc_ang_min = fc_ang_min.mean().item()
+
         # '{}\t{}\t{}\t{}\t{}\t{} \n'
         msg = loss_log_format.format(
             epoch=epoch, lr=lr[0],
             train_loss=train_loss, train_acc=train_acc,
             test_loss=test_loss, test_acc=test_acc,
             train_cos=train_cos, train_ang=train_ang,
-            test_cos=test_cos, test_ang=test_ang)
+            test_cos=test_cos, test_ang=test_ang,
+            avg_fc_cos_max=avg_fc_cos_max,
+            avg_fc_ang_min=avg_fc_ang_min)
 
         print('====>\n' + loss_log_format + '\n' + msg + '\n')
         fp_loss.write(msg+'\n')
         fp_loss.flush()
+
+        # msg2 = fc_log_format.format(
+        #     epoch=epoch,
+        #     avg_fc_cos_max=avg_fc_cos_max,
+        #     avg_fc_ang_min=avg_fc_ang_min,
+        #     fc_cos_max=fc_cos_max.tolist(),
+        #     fc_ang_min=fc_ang_min.tolist(),
+        #     fc_cos_mat=0,
+        #     fc_ang_mat=0,
+        #     fc_wt=0)
+
+        # print('====>\n' + fc_log_format + '\n' + msg2 + '\n')
+        # # print('====>\nfc_wt.shape:', fc_wt.shape)
+        # # print('====>\fc_cos_mat.shape:', fc_cos_mat.shape)
+
+        msg3 = fc_log_format.format(
+            epoch=epoch,
+            avg_fc_cos_max=avg_fc_cos_max,
+            avg_fc_ang_min=avg_fc_ang_min,
+            fc_cos_max=fc_cos_max.tolist(),
+            fc_ang_min=fc_ang_min.tolist(),
+            fc_cos_mat=fc_cos_mat.tolist(),
+            fc_ang_mat=fc_ang_mat.tolist(),
+            fc_wt=fc_wt.tolist())
+
+        fp_fc.write(msg3+'\n')
+        fp_fc.flush()
 
         # Save checkpoint.
         if test_acc > best_acc:
@@ -477,6 +524,7 @@ def main():
 
     # fp_log.close()
     fp_loss.close()
+    fp_fc.close()
 
 
 if __name__ == '__main__':

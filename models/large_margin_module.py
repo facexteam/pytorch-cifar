@@ -21,6 +21,10 @@ class LargeMarginModule_Cosineface(nn.Module):
         self.embedding_net = embedding_net
         self.linear = nn.Linear(self.input_size, output_size, bias=False)
 
+    def get_fc_weights(self):
+        wt = self.linear.weight.clone().detach()
+        return wt
+
     def forward(self, x, targets):
         embedding = self.embedding_net(x)
 
@@ -91,6 +95,10 @@ class LargeMarginModule_Arcface(nn.Module):
         self.weight = nn.Parameter(torch.Tensor(
             self.output_size, self.input_size))
         nn.init.xavier_uniform_(self.weight)
+
+    def get_fc_weights(self):
+        wt = self.weight.clone().detach()
+        return wt
 
     def forward(self, x, targets):
         # print('===> In LargeMarginModule_Arcface.forward()')
@@ -173,6 +181,10 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
             lambda x: 8 * x ** 4 - 8 * x ** 2 + 1,
             lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
         ]
+
+    def get_fc_weights(self):
+        wt = self.weight.clone().detach()
+        return wt
 
     def forward(self, x, targets):
         # print('===> In LargeMarginModule_Arcface.forward()')
@@ -259,6 +271,10 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
             lambda x: 8 * x ** 4 - 8 * x ** 2 + 1,
             lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
         ]
+
+    def get_fc_weights(self):
+        wt = self.weight.clone().detach()
+        return wt
 
     def forward(self, x, targets):
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
