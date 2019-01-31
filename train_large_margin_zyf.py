@@ -27,6 +27,7 @@ from models.large_margin_module import LargeMarginModule_Cosineface, LargeMargin
 from models.spa_softmax import SpaSoftmax
 from models.spa_softmax_v2 import SpaSoftmax_v2
 from models.spa_softmax_v3 import SpaSoftmax_v3
+from models.spa_softmax_v4 import SpaSoftmax_v4
 
 
 def add_arg_parser():
@@ -208,6 +209,11 @@ def main():
         elif loss_type == 'spav3':
             print('===> Using spav3 Softmax loss')
             net = SpaSoftmax_v3(net, 10, args.loss_scale,
+                                args.loss_m, args.loss_n,
+                                args.loss_b)
+        elif loss_type == 'spav4':
+            print('===> Using spav4 Softmax loss')
+            net = SpaSoftmax_v4(net, 10, args.loss_scale,
                                 args.loss_m, args.loss_n,
                                 args.loss_b)
         else:
