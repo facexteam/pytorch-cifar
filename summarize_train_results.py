@@ -133,7 +133,7 @@ def summary_by_margins(root_dir, sub_dir_template,
 
 if __name__ == '__main__':
     root_dir = './'
-    sub_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m%g'
+    sub_dir_template = 'checkpoints-res20-cifar-coslr-200ep-lmcos-s%d-m%g'
     # sub_dir_template = 'checkpoints-res20-cifar-lmcos-s%d-coslr-200ep-new-m'
 
     #scale_list = [1, 2, 4, 8, 16, 32, 64]

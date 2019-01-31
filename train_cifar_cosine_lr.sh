@@ -1,8 +1,8 @@
 #!/bin/bash
 # maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
-python main_zyf.py --cifar-dir ./data \
-    --net resnet20_cifar \
+python main_zyf.py --cifar-coslr-200ep-dir ./data \
+    --net resnet20_cifar-coslr-200ep \
     --gpu-ids 1 \
     --lr-scheduler cosine \
     --lr 0.1 \
@@ -13,8 +13,8 @@ python main_zyf.py --cifar-dir ./data \
     --data-workers 4 \
     --test-bs 200 \
     --test-dw 4 \
-    --model-prefix res20-cifar \
-    --save-dir checkpoints-res20-cifar-coslr
+    --model-prefix res20-cifar-coslr-200ep \
+    --save-dir checkpoints-res20-cifar-coslr-200ep-coslr
     # --no-progress-bar \
     # --resume \
     # --resume-checkpoints checkpoints/ckpt.t7 \
