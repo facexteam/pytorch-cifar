@@ -109,16 +109,32 @@ class LargeMarginModule_arcface(nn.Module):
         embedding = self.embedding_net(x)
 
         # --------------------------- calculate cos(theta) & theta ---------------------------
-        # ebd_norm = torch.norm(embedding, 2, 1)
+        # # ebd_norm = torch.norm(embedding, 2, 1)
 
-        normalized_ebd = F.normalize(embedding, dim=1)
-        normalized_wt = F.normalize(self.linear.weight, dim=1)
+        # normalized_ebd = F.normalize(embedding, dim=1)
+        # normalized_wt = F.normalize(self.linear.weight, dim=1)
 
-        cos_theta = F.linear(normalized_ebd, normalized_wt)
+        # cos_theta = F.linear(normalized_ebd, normalized_wt)
         # cos_theta = cos_theta.clamp(-1, 1)
 
         # print('---> cos_theta:', cos_theta)
         # print('---> cos_theta.requires_grad:', cos_theta.requires_grad)
+        # do L2 normalization
+
+        embedding = F.normalize(embedding, dim=1)
+        # print('---> emb (after norm): ', embedding)
+        # print('---> emb[j].norm (after norm): ', embedding.norm(dim=1))
+
+        weight = F.normalize(self.linear.weight, dim=1)
+        # print('---> weight (after norm): ', weight)
+        # print('---> weight[j].norm (after norm): ',
+        #       weight.norm(dim=1))
+
+        cos_theta = F.linear(embedding, weight)
+        cos_theta = cos_theta.clamp(-1, 1)
+
+        # print('---> cos_theta (fc_output): ', cos_theta)
+        # print('---> cos_theta[j].norm (fc_output): ',
 
         if self.m > 0:
             # theta = cos_theta.data.acos()  # no grad here
@@ -212,7 +228,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         normalized_wt = F.normalize(self.linear.weight, dim=1)
 
         cos_theta = F.linear(normalized_ebd, normalized_wt)
-        # cos_theta = cos_theta.clamp(-1, 1)
+        cos_theta = cos_theta.clamp(-1, 1)
 
         cos_m_theta = self.mlambda[self.m](cos_theta)
         # print('---> cos_theta:', cos_theta)
@@ -307,7 +323,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         #                      F.normalize(self.linear.weight))
         # cos_theta = cos_theta.clamp(-1, 1)
         cos_theta = F.linear(normalized_ebd, normalized_wt)
-        # cos_theta = cos_theta.clamp(-1, 1)
+        cos_theta = cos_theta.clamp(-1, 1)
 
         cos_m_theta = self.mlambda[self.m](cos_theta)
 
