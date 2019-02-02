@@ -340,6 +340,7 @@ def main():
             # print('---> idx_mat.shape:', idx_mat.shape)
 
             cosine_mat = torch.gather(cos_theta, 1, idx_mat)
+            cosine_mat = cosine_mat.clamp(-1, 1)
             # print('---> cosine_mat:', cosine_mat)
             # print('---> cosine_mat.shape:', cosine_mat.shape)
             # print('---> cosine_mat.max():', cosine_mat.max())
@@ -401,6 +402,8 @@ def main():
                 # print('---> idx_mat.shape:', idx_mat.shape)
 
                 cosine_mat = torch.gather(cos_theta, 1, idx_mat)
+                cosine_mat = cosine_mat.clamp(-1, 1)
+
                 # print('---> cosine_mat:', cosine_mat)
                 # print('---> cosine_mat.shape:', cosine_mat.shape)
                 # print('---> cosine_mat.max():', cosine_mat.max())
@@ -444,6 +447,8 @@ def main():
         fc_wt = net.get_fc_weights()
         fc_wt_n = F.normalize(fc_wt, dim=1)
         fc_cos_mat = fc_wt_n.mm(fc_wt_n.t())
+        fc_cos_mat = fc_cos_mat.clamp(-1, 1)
+
         fc_ang_mat = fc_cos_mat.acos() * 180 / np.pi
 
         fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
