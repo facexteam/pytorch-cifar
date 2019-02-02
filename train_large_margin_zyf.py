@@ -23,7 +23,7 @@ import numpy as np
 from models import *
 import time
 
-from models.large_margin_module import LargeMarginModule_Cosineface, LargeMarginModule_ScaledASoftmax, LargeMarginModule_Arcface
+from models.large_margin_module import LargeMarginModule_cosface, LargeMarginModule_ScaledASoftmax, LargeMarginModule_arcface
 from models.spa_softmax import SpaSoftmax
 from models.spa_softmax_v2 import SpaSoftmax_v2
 from models.spa_softmax_v3 import SpaSoftmax_v3
@@ -198,8 +198,8 @@ def main():
             net, 10, args.loss_scale,
             args.loss_m, args.loss_lambda)
     elif loss_type == 'arcface':
-        print('===> Using Arcface loss')
-        net = LargeMarginModule_Arcface(
+        print('===> Using arcface loss')
+        net = LargeMarginModule_arcface(
             net, 10, args.loss_scale, args.loss_m)
     elif loss_type.startswith('spa'):
         if loss_type == 'spav2':
@@ -227,7 +227,7 @@ def main():
                              args.loss_m, args.loss_b)
     else:  # cosface
         print('===> Using cosface loss')
-        net = LargeMarginModule_Cosineface(
+        net = LargeMarginModule_cosface(
             net, 10, args.loss_scale, args.loss_m)
 
     if device.startswith('cuda'):

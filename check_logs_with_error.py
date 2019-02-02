@@ -59,4 +59,3 @@ if __name__ == '__main__':
         keywords = sys.argv[1:]
     
     failed_trainings = check(root_dir, keywords, prefix)
-

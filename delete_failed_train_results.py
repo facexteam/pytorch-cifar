@@ -85,4 +85,3 @@ if __name__ == '__main__':
 
     if do_delete:
         delete_sub_dirs(root_dir, failed_trainings)
-
