@@ -10,9 +10,9 @@ from .resnet import BasicBlock
 import numpy as np
 
 
-class LargeMarginModule_Cosineface(nn.Module):
+class LargeMarginModule_cosface(nn.Module):
     def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
-        super(LargeMarginModule_Cosineface, self).__init__()
+        super(LargeMarginModule_cosface, self).__init__()
         self.input_size = sum(embedding_net.output_shape)
         # self.eps = eps
         self.scale = scale
@@ -28,7 +28,7 @@ class LargeMarginModule_Cosineface(nn.Module):
     def forward(self, x, targets):
         embedding = self.embedding_net(x)
 
-        # print('\n===> In LargeMarginModule_Cosineface.forward()\n')
+        # print('\n===> In LargeMarginModule_cosface.forward()\n')
         # print('---> emb (before norm): ', embedding)
         # print('---> emb[j].norm (before norm): ', embedding.norm(dim=1))
         # print('---> weight (before norm): ', self.linear.weight)
@@ -79,9 +79,9 @@ class LargeMarginModule_Cosineface(nn.Module):
             + ', m=' + str(self.m) + ')'
 
 
-class LargeMarginModule_Arcface(nn.Module):
+class LargeMarginModule_arcface(nn.Module):
     def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
-        super(LargeMarginModule_Arcface, self).__init__()
+        super(LargeMarginModule_arcface, self).__init__()
         self.input_size = sum(embedding_net.output_shape)
         self.output_size = output_size
 
@@ -104,7 +104,7 @@ class LargeMarginModule_Arcface(nn.Module):
         return wt
 
     def forward(self, x, targets):
-        # print('===> In LargeMarginModule_Arcface.forward()')
+        # print('===> In LargeMarginModule_arcface.forward()')
         # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
         embedding = self.embedding_net(x)
 
@@ -194,7 +194,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         return wt
 
     def forward(self, x, targets):
-        # print('===> In LargeMarginModule_Arcface.forward()')
+        # print('===> In LargeMarginModule_arcface.forward()')
 
         embedding = self.embedding_net(x)
 
