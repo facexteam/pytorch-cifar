@@ -30,7 +30,7 @@ def parse_log(log_fn, fp, s, m, write_head=1):
         print('\t%d lines parsed' % line_cnt)
 
         if not found:
-            print('\tmissed line 199 for: s=%d,m=%g' % (s, m))
+            print('\tfailed line 199 for: s=%d,m=%g' % (s, m))
 
         fp_log.close()
 
@@ -65,7 +65,7 @@ def summary_by_scales(root_dir, sub_dir_template,
                 print('long_fn: ', log_fn)
 
                 if not osp.exists(log_fn):
-                    print('\tmissed save_dir for: s=%d,m=%g' % (s, m))
+                    print('\tfailed save_dir for: s=%d,m=%g' % (s, m))
 
                     failed_m_list.append(float('%g' % m))
                     failed_s_list.append(s)
@@ -84,6 +84,10 @@ def summary_by_scales(root_dir, sub_dir_template,
     print('failed_s_list: ', failed_s_list)
     print('failed_m_list: ', failed_m_list)
 
+    failed_save_fn = save_prefix + '_failed_settings.tsv.txt'
+    print('\n       save failed settings into file: ', failed_save_fn)
+    fp_failed = open(failed_save_fn, 'w')
+
     failed_s_str = '('
     for s in failed_s_list:
         failed_s_str += str(s) + ' \t'
@@ -97,6 +101,10 @@ def summary_by_scales(root_dir, sub_dir_template,
     print('failed_s_list: ', failed_s_str)
     print('failed_m_list: ', failed_m_str)
 
+    fp_failed.write('failed_s_list: \n' + failed_s_str+'\n')
+    fp_failed.write('failed_m_list: \n' + failed_m_str+'\n')
+
+    fp_failed.close()
 
 def summary_by_margins(root_dir, sub_dir_template,
                        scale_list, m_list,
@@ -123,7 +131,7 @@ def summary_by_margins(root_dir, sub_dir_template,
                 print('long_fn: ', log_fn)
 
                 if not osp.exists(log_fn):
-                    print('\tmissed save_dir for: s=%d,m=%g' % (s, m))
+                    print('\tfailed save_dir for: s=%d,m=%g' % (s, m))
                     continue
 
                 write_head, found = parse_log(log_fn, fp, s, m, write_head)
@@ -142,3 +150,4 @@ if __name__ == '__main__':
 
     summary_by_margins(root_dir, sub_dir_template, scale_list, m_list)
     summary_by_scales(root_dir, sub_dir_template, scale_list, m_list)
+
