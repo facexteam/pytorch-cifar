@@ -8,13 +8,43 @@ import os.path as osp
 import numpy as np
 import torch
 
+import shutil
 
-def fix_train_fc_log(fname, verbose=False):
+
+def fix_train_fc_log(fname, rename=False, verbose=False):
     fn, ext = osp.splitext(fname)
-    res_fn = fn + '-fixed' + ext
+
+    old_fn = fname
+
+    if rename:
+        fname = fn + '-unfixed' + ext
+        if osp.exists(fname):
+            i = 0
+            while True:
+                i+=1
+                fname = fn + '-unfixed' + str(i) + ext
+                if not osp.exists(fname):
+                    break
+
+        shutil.move(old_fn, fname)
+
+        print('\n===> Rename {} into {}'.format(old_fn, fname))
+
+        fixed_fn = old_fn
+    else:
+        fixed_fn = fn + '-fixed' + ext
+        if osp.exists(fixed_fn):
+            i = 0
+            while True:
+                i += 1
+                fixed_fn = fn + '-fixed' + str(i) + ext
+                if not osp.exists(fixed_fn):
+                    break
+
+    print('\n===> Save fixed results into ', fixed_fn)
 
     fp = open(fname, 'r')
-    fp_out = open(res_fn, 'w')
+    fp_out = open(fixed_fn, 'w')
 
     line_cnt = 0
 
@@ -83,12 +113,40 @@ def fix_train_fc_log(fname, verbose=False):
     return fixed_dict
 
 
-def fix_train_loss_log(fname, fixed_dict):
+def fix_train_loss_log(fname, fixed_dict, rename=False):
     fn, ext = osp.splitext(fname)
-    res_fn = fn + '-fixed' + ext
+
+    old_fn = fname
+
+    if rename:
+        fname = fn + '-unfixed' + ext
+        if osp.exists(fname):
+            i = 0
+            while True:
+                i += 1
+                fname = fn + '-unfixed' + str(i) + ext
+                if not osp.exists(fname):
+                    break
+
+        shutil.move(old_fn, fname)
+
+        print('\n===> Rename {} into {}'.format(old_fn, fname))
+
+        fixed_fn = old_fn
+    else:
+        fixed_fn = fn + '-fixed' + ext
+        if osp.exists(fixed_fn):
+            i = 0
+            while True:
+                i += 1
+                fixed_fn = fn + '-fixed' + str(i) + ext
+                if not osp.exists(fixed_fn):
+                    break
+
+    print('\n===> Save fixed results into ', fixed_fn)
 
     fp = open(fname, 'r')
-    fp_out = open(res_fn, 'w')
+    fp_out = open(fixed_fn, 'w')
 
     line_cnt = 0
 
@@ -128,7 +186,7 @@ if __name__ == '__main__':
     fn_fc_log = './train-last-fc.txt'
     fn_loss_log = './train-loss.txt'
 
-    fixed_dict = fix_train_fc_log(fn_fc_log)
+    fixed_dict = fix_train_fc_log(fn_fc_log, True)
 
     if osp.exists(fn_loss_log):
-        fix_train_loss_log(fn_loss_log, fixed_dict)
+        fix_train_loss_log(fn_loss_log, fixed_dict, True)
