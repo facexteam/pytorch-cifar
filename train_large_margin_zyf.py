@@ -151,6 +151,11 @@ def main():
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.data_workers)
 
+    trainset2 = torchvision.datasets.CIFAR10(
+        root=args.cifar_dir, train=True, download=do_download, transform=transform_test)
+    trainloader_test = torch.utils.data.DataLoader(
+        trainset2, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+
     testset = torchvision.datasets.CIFAR10(
         root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
@@ -294,7 +299,7 @@ def main():
     fp_log.close()
 
     fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{train_acc}\t{test_loss}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
+    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{test_loss}\t{train_acc}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
     fp_loss.write(loss_log_format + '\n')
     fp_loss.flush()
 
@@ -376,7 +381,7 @@ def main():
 
         return avg_loss, acc, avg_cosine, avg_angle
 
-    def test(epoch):
+    def test(epoch, dataloader):
         net.eval()
         test_loss = 0
         correct = 0
@@ -390,7 +395,7 @@ def main():
         avg_angle = 0
 
         with torch.no_grad():
-            for batch_idx, (inputs, targets) in enumerate(testloader):
+            for batch_idx, (inputs, targets) in enumerate(dataloader):
                 inputs, targets = inputs.to(device), targets.to(device)
 
                 outputs, cos_theta = net(inputs, targets)
@@ -432,7 +437,7 @@ def main():
                 acc = float(correct)/total
 
                 if args.progress_bar:
-                    progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cosine: %.3f | Avg-Angle(degree): %6.3f'
+                    progress_bar(batch_idx, len(dataloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d) | Avg-Cosine: %.3f | Avg-Angle(degree): %6.3f'
                                  % (avg_loss, acc*100, correct, total, avg_cosine, avg_angle))
 
         return avg_loss, acc, avg_cosine, avg_angle
@@ -442,7 +447,10 @@ def main():
         lr = scheduler.get_lr()
         print('\n---> lr=', lr[0])
         train_loss, train_acc, train_cos, train_ang = train(epoch)
-        test_loss, test_acc, test_cos, test_ang = test(epoch)
+
+        train_loss, train_acc, train_cos, train_ang = test(
+            epoch, trainloader_test)
+        test_loss, test_acc, test_cos, test_ang = test(epoch, testloader)
 
         fc_wt = net.get_fc_weights()
         fc_wt_n = F.normalize(fc_wt, dim=1)
@@ -451,7 +459,9 @@ def main():
 
         fc_ang_mat = fc_cos_mat.acos() * 180 / np.pi
 
-        fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
+        # fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
+        # remove diagnal elements
+        fc_cos_mat2 = fc_cos_mat - torch.eye(fc_cos_mat.shape[0])*10
         fc_cos_max, pos = fc_cos_mat2.max(dim=0)
         fc_ang_min = fc_ang_mat[pos].diag()
 
@@ -508,11 +518,13 @@ def main():
                 'epoch': epoch,
             }
 
-            time.sleep(10)
-            save_name = osp.join(args.save_dir, '%s-best.t7' %
-                                 (args.model_prefix))
-            torch.save(state, save_name)
             best_acc = test_acc
+
+            if epoch > args.num_epochs/2:
+                time.sleep(10)
+                save_name = osp.join(args.save_dir, '%s-best-acc.t7' %
+                                     (args.model_prefix))
+                torch.save(state, save_name)
 
         if test_acc >= args.save_thresh:
             print('Saving..')
@@ -522,10 +534,11 @@ def main():
                 'epoch': epoch,
             }
 
-            time.sleep(10)
-            save_name = osp.join(args.save_dir, '%s-%04d-testacc%4.2f.t7' %
-                                 (args.model_prefix, epoch, test_acc*100))
-            torch.save(state, save_name)
+            if epoch > args.num_epochs/2:
+                time.sleep(10)
+                save_name = osp.join(args.save_dir, '%s-%04d-testacc%4.2f.t7' %
+                                     (args.model_prefix, epoch, test_acc*100))
+                torch.save(state, save_name)
 
     # fp_log.close()
     fp_loss.close()

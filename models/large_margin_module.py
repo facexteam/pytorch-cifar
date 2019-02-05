@@ -131,12 +131,13 @@ class LargeMarginModule_arcface(nn.Module):
         #       weight.norm(dim=1))
 
         cos_theta = F.linear(embedding, weight)
-        cos_theta = cos_theta.clamp(-1, 1)
 
         # print('---> cos_theta (fc_output): ', cos_theta)
         # print('---> cos_theta[j].norm (fc_output): ',
 
         if self.m > 0:
+            cos_theta = cos_theta.clamp(-1, 1)
+
             # theta = cos_theta.data.acos()  # no grad here
             theta = cos_theta.acos()  # theta requires grad here
             # theta.requires_grad_()
