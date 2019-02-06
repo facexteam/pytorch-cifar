@@ -26,7 +26,14 @@ def load_tsv(tsv_fn, with_header=True, verbose=False):
 
             if with_header:
                 for val in splits:
-                    field_keys.append(val[1:-1])
+                    #field_keys.append(val[1:-1])
+                    val = val.strip()
+                    if val.startswith('{'):
+                        val = val[1:]
+                    if val.endswith('}'):
+                        val = val[0:-1]
+
+                    field_keys.append(val)
 
                 continue
             else:

@@ -58,13 +58,13 @@ def summarize_all_scales_margins(save_prefix,
 
         for m in m_list:
             write_line = '\t%g' % m
-        if str(m) in all_margin_dict:
-            for s in scale_list:
-                tmp = all_margin_dict[str(m)].get(str(s), None)
-                if tmp is not None:
-                    write_line += '\t%s' % tmp[ff]
-                else:
-                    write_line += '\t'
+            if str(m) in all_margin_dict:
+                for s in scale_list:
+                    tmp = all_margin_dict[str(m)].get(str(s), None)
+                    if tmp is not None:
+                        write_line += '\t%s' % tmp[ff]
+                    else:
+                        write_line += '\t'
 
             fp_out.write(write_line+'\n')
 
@@ -88,7 +88,7 @@ def summarize_all_scales_margins(save_prefix,
 
     fp_out.flush()
 
-    fp_out.write('\navg_fc_ang_min-test_ang\n' % ff)
+    fp_out.write('\navg_fc_ang_min-test_ang\n')
     fp_out.write(header_row)
 
     for m in m_list:
