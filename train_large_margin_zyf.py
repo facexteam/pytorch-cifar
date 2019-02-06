@@ -33,7 +33,7 @@ from models.spa_softmax_v5 import SpaSoftmax_v5
 
 def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--net', default='resnet20_cifar',
+    parser.add_argument('--net', default='resnet20_cifar_nofc',
                         type=str, help='network architeture')
     parser.add_argument('--gpu-ids', default='0',
                         type=str, help='which GPUs to train on, set to "0,1,2" to use multiple GPUs')
@@ -194,7 +194,17 @@ def main():
     #     net = ShuffleNetV2(1)
     # else:
     #     net = ResNet20_cifar10()
-    net = ResNet20_cifar10_nofc()
+    if net_name == 'ResNet32_cifar10_nofc'.lower():
+        net = ResNet32_cifar10_nofc()
+    elif net_name == 'ResNet44_cifar10_nofc'.lower():
+        net = ResNet44_cifar10_nofc()
+    if net_name == 'ResNet56_cifar10_nofc'.lower():
+        net = ResNet56_cifar10_nofc()
+    elif net_name == 'ResNet110_cifar10_nofc'.lower():
+        net = ResNet110_cifar10_nofc()
+    else:
+        net = ResNet20_cifar10_nofc()
+
     loss_type = args.loss_type.lower()
 
     if loss_type == 'asoftmax':
@@ -461,7 +471,8 @@ def main():
 
         # fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
         # remove diagnal elements
-        fc_cos_mat2 = fc_cos_mat - torch.eye(fc_cos_mat.shape[0], device=device)*10
+        fc_cos_mat2 = fc_cos_mat - \
+            torch.eye(fc_cos_mat.shape[0], device=device)*10
         fc_cos_max, pos = fc_cos_mat2.max(dim=0)
         fc_ang_min = fc_ang_mat[pos].diag()
 
