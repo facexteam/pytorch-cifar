@@ -16,21 +16,34 @@ def summarize_all_scales_margins(save_prefix,
     scale_list.sort()
     m_list.sort()
 
-    summ_fields = ['train_acc', 'test_acc',
+    summ_fields = [
+                   'avg_fc_ang_min',
                    'train_ang', 'test_ang',
+                   'train_acc', 'test_acc',
+                   'avg_fc_cos_max',
                    'train_cos', 'test_cos',
-                   'avg_fc_cos_max', 'avg_fc_ang_min']
+                   'train_loss', 'test_loss',
+    ]
 
     save_fn = save_prefix + '_all_sm.tsv.txt'
     print('\n===> summrize train results by all scales and margins')
     print('        will save results into file: ', save_fn)
 
     fp_out = open(save_fn, 'w')
+    lines_per_subtable = 35
 
-    header_row = '\t\t'
+    main_header_row = '\t'
     for s in scale_list:
-        header_row += str(s) + '\t'
-    header_row = header_row[0:-1] + '\n'
+        main_header_row += '\tS_' + str(s) 
+
+    main_header_row += '\n'
+    fp_out.write(main_header_row)
+
+    sub_header_row = '\t'
+    for s in scale_list:
+        sub_header_row += '\t' + str(s)
+
+    sub_header_row += '\n'
 
     # all_scale_dict = {}
     # for s in scale_list:
@@ -52,29 +65,11 @@ def summarize_all_scales_margins(save_prefix,
 
         all_margin_dict[str(m)] = tsv_line_dict
 
-    for ff in summ_fields:
-        fp_out.write('\n%s\n' % ff)
-        fp_out.write(header_row)
-
-        for m in m_list:
-            write_line = '\t%g' % m
-            if str(m) in all_margin_dict:
-                for s in scale_list:
-                    tmp = all_margin_dict[str(m)].get(str(s), None)
-                    if tmp is not None:
-                        write_line += '\t%s' % tmp[ff]
-                    else:
-                        write_line += '\t'
-
-            fp_out.write(write_line+'\n')
-
-        fp_out.flush()
-
-    fp_out.write('\navg_fc_ang_min-train_ang\n')
-    fp_out.write(header_row)
+    fp_out.write('\n\navg_fc_ang_min-train_ang\n')
+    fp_out.write(sub_header_row)
 
     for m in m_list:
-        write_line = '\t%g' % m
+        write_line = 'M_%g\t%g' % (m, m)
         if str(m) in all_margin_dict:
             for s in scale_list:
                 tmp = all_margin_dict[str(m)].get(str(s), None)
@@ -82,17 +77,20 @@ def summarize_all_scales_margins(save_prefix,
                     write_line += '\t%f' % (float(tmp['avg_fc_ang_min']
                                                   ) - float(tmp['train_ang']))
                 else:
-                    write_line += '\t'
+                    write_line += '\tN.A.'
 
         fp_out.write(write_line+'\n')
 
+    for i in range(lines_per_subtable - len(m_list)):
+        fp_out.write('\n')
+
     fp_out.flush()
 
-    fp_out.write('\navg_fc_ang_min-test_ang\n')
-    fp_out.write(header_row)
+    fp_out.write('\n\navg_fc_ang_min-test_ang\n')
+    fp_out.write(sub_header_row)
 
     for m in m_list:
-        write_line = '\t%g' % m
+        write_line = 'M_%g\t%g' % (m, m)
         if str(m) in all_margin_dict:
             for s in scale_list:
                 tmp = all_margin_dict[str(m)].get(str(s), None)
@@ -100,9 +98,33 @@ def summarize_all_scales_margins(save_prefix,
                     write_line += '\t%f' % (float(tmp['avg_fc_ang_min']
                                                   ) - float(tmp['test_ang']))
                 else:
-                    write_line += '\t'
+                    write_line += '\tN.A.'
 
         fp_out.write(write_line+'\n')
+
+    for i in range(lines_per_subtable - len(m_list)):
+        fp_out.write('\n')
+
+    for ff in summ_fields:
+        fp_out.write('\n\n%s\n' % ff)
+        fp_out.write(sub_header_row)
+
+        for m in m_list:
+	    write_line = 'M_%g\t%g' % (m, m)
+            if str(m) in all_margin_dict:
+                for s in scale_list:
+                    tmp = all_margin_dict[str(m)].get(str(s), None)
+                    if tmp is not None:
+                        write_line += '\t%s' % tmp[ff]
+                    else:
+                        write_line += '\tN.A.'
+
+            fp_out.write(write_line+'\n')
+
+        for i in range(lines_per_subtable - len(m_list)):
+            fp_out.write('\n')
+
+        fp_out.flush()
 
     fp_out.close()
 
@@ -114,3 +136,4 @@ if __name__ == '__main__':
     m_list = np.arange(0, 1.05, 0.05)
 
     summarize_all_scales_margins(save_prefix, scale_list, m_list)
+
