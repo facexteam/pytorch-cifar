@@ -461,7 +461,7 @@ def main():
 
         # fc_cos_mat2 = fc_cos_mat - torch.diag(fc_cos_mat.diag())
         # remove diagnal elements
-        fc_cos_mat2 = fc_cos_mat - torch.eye(fc_cos_mat.shape[0])*10
+        fc_cos_mat2 = fc_cos_mat - torch.eye(fc_cos_mat.shape[0], device=device)*10
         fc_cos_max, pos = fc_cos_mat2.max(dim=0)
         fc_ang_min = fc_ang_mat[pos].diag()
 
