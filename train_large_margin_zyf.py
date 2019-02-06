@@ -33,7 +33,7 @@ from models.spa_softmax_v5 import SpaSoftmax_v5
 
 def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--net', default='resnet20_cifar_nofc',
+    parser.add_argument('--net', default='resnet20_cifar10_nofc',
                         type=str, help='network architeture')
     parser.add_argument('--gpu-ids', default='0',
                         type=str, help='which GPUs to train on, set to "0,1,2" to use multiple GPUs')
@@ -195,14 +195,19 @@ def main():
     # else:
     #     net = ResNet20_cifar10()
     if net_name == 'ResNet32_cifar10_nofc'.lower():
+        print('===> Network: ResNet32_cifar10_nofc')
         net = ResNet32_cifar10_nofc()
     elif net_name == 'ResNet44_cifar10_nofc'.lower():
+        print('===> Network: ResNet44_cifar10_nofc')
         net = ResNet44_cifar10_nofc()
     if net_name == 'ResNet56_cifar10_nofc'.lower():
+        print('===> Network: ResNet56_cifar10_nofc')
         net = ResNet56_cifar10_nofc()
     elif net_name == 'ResNet110_cifar10_nofc'.lower():
+        print('===> Network: ResNet110_cifar10_nofc')
         net = ResNet110_cifar10_nofc()
     else:
+        print('===> Network: ResNet20_cifar10_nofc')
         net = ResNet20_cifar10_nofc()
 
     loss_type = args.loss_type.lower()
