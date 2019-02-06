@@ -6,6 +6,8 @@ import os
 import os.path as osp
 import numpy as np
 
+from summarize_all_scales_margins import summarize_all_scales_margins
+
 
 def parse_log(log_fn, fp, s, m, write_head=1):
     print('---> Parsing log file: ', log_fn)
@@ -15,7 +17,7 @@ def parse_log(log_fn, fp, s, m, write_head=1):
     with open(log_fn, 'r') as fp_log:
         if write_head:
             line = fp_log.readline()
-            fp.write('Train-script\tScale\tMargin-m\t ' +
+            fp.write('Train-script\tScale\tMargin-m\t' +
                      line.replace(' ', ''))
             write_head = 0
 
@@ -42,6 +44,9 @@ def summary_by_scales(root_dir, sub_dir_template,
                       save_prefix='summary'):
     failed_s_list = []
     failed_m_list = []
+
+    scale_list.sort()
+    m_list.sort()
 
     print('\n===> summary train results by scales')
 
@@ -106,10 +111,13 @@ def summary_by_scales(root_dir, sub_dir_template,
 
     fp_failed.close()
 
+
 def summary_by_margins(root_dir, sub_dir_template,
                        scale_list, m_list,
                        save_prefix='summary'):
     print('\n===> summary train results by scales')
+    scale_list.sort()
+    m_list.sort()
 
     for m in m_list:
         print('\n===> summary train results with margins m=', m)
@@ -138,6 +146,8 @@ def summary_by_margins(root_dir, sub_dir_template,
 
             fp.close()
 
+    summarize_all_scales_margins(save_prefix, scale_list, m_list)
+
 
 if __name__ == '__main__':
     root_dir = './'
@@ -147,7 +157,11 @@ if __name__ == '__main__':
     #scale_list = [1, 2, 4, 8, 16, 32, 64]
     scale_list = [64, 32, 16, 8, 4, 2, 1]
     m_list = np.arange(0, 1.05, 0.05)
+    save_prefix = 'summary'
 
-    summary_by_margins(root_dir, sub_dir_template, scale_list, m_list)
-    summary_by_scales(root_dir, sub_dir_template, scale_list, m_list)
+    summary_by_margins(root_dir, sub_dir_template,
+                       scale_list, m_list, save_prefix)
+    summary_by_scales(root_dir, sub_dir_template,
+                      scale_list, m_list, save_prefix)
 
+    # summarize_all_scales_margins(save_prefix, scale_list, m_list)
