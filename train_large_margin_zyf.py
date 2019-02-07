@@ -121,7 +121,7 @@ def main():
     if len(gpu_ids) == 1 and device == 'cuda':
         device = 'cuda:'+str(gpu_ids[0])
 
-    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+    last_epoch = -1  # start from epoch 0 or last checkpoint epoch
     step_epochs = [int(l) for l in args.lr_step_epochs.split(',')]
     best_acc = 0  # best test accuracy
 
@@ -264,18 +264,32 @@ def main():
         if osp.isdir(args.resume_checkpoint):
             ckpt = ''
             epoch = 0
+            best_ckpt = ''
+
+            # try to find the checkpoint for the last epoch
             for fn in os.listdir(args.resume_checkpoint):
                 if not fn.endswith('.t7'):
                     continue
 
                 splits = fn.rsplit('-', 2)
+                if splits[1] == 'best':
+                    best_ckpt = fn
+                    continue
+
                 t_epoch = int(splits[1])
 
                 if t_epoch > epoch:
                     epoch = t_epoch
                     ckpt = fn
 
-            args.resume_checkpoint = osp.join(args.resume_checkpoint, ckpt)
+            # if not found,  use model with best acc if available
+            if not ckpt and best_ckpt:
+                ckpt = best_ckpt
+
+            if ckpt:
+                args.resume_checkpoint = osp.join(args.resume_checkpoint, ckpt)
+            else:
+                args.resume_checkpoint = ''
 
         if not osp.exists(args.resume_checkpoint):
             print("===> Resume checkpoint not found: ", args.resume_checkpoint)
@@ -287,18 +301,25 @@ def main():
         checkpoint = torch.load(args.resume_checkpoint)
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
-        start_epoch = checkpoint['epoch']
+        last_epoch = checkpoint['epoch']
 
     criterion = nn.CrossEntropyLoss().to(device)
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=args.mom, weight_decay=args.wd)
+
     if args.lr_scheduler == 'cosine':
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=args.num_epochs, eta_min=args.lr_min)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
+                                                         T_max=args.num_epochs,
+                                                         eta_min=args.lr_min,
+                                                         last_epoch=last_epoch
+                                                         )
     else:
-        scheduler = optim.lr_scheduler.MultiStepLR(
-            optimizer, milestones=step_epochs, gamma=args.lr_factor)
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
+                                                   milestones=step_epochs,
+                                                   gamma=args.lr_factor,
+                                                   last_epoch=last_epoch
+                                                   )
 
     if not osp.exists(args.save_dir):
         os.makedirs(args.save_dir)
@@ -307,21 +328,27 @@ def main():
     loss_fn = osp.join(args.save_dir, 'train-loss.txt')
     fc_fn = osp.join(args.save_dir, 'train-last-fc.txt')
 
-    fp_log = open(log_fn, 'w')
+    open_flag = 'w'
+    if args.resume:
+        open_flag = 'a+'
+
+    fp_log = open(log_fn, open_flag)
     fp_log.write("===> TRAIN ARGS:\n")
     fp_log.write(str(args)+'\n')
     fp_log.write("===<\n")
     fp_log.close()
 
-    fp_loss = open(loss_fn, 'w')
-    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{test_loss}\t{train_acc}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
-    fp_loss.write(loss_log_format + '\n')
-    fp_loss.flush()
+    fp_loss = open(loss_fn, open_flag)
+    if last_epoch < 0:
+        loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{test_loss}\t{train_acc}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
+        fp_loss.write(loss_log_format + '\n')
+        fp_loss.flush()
 
-    fp_fc = open(fc_fn, 'w')
-    fc_log_format = '{epoch}\t{avg_fc_cos_max}\t{avg_fc_ang_min}\t{fc_cos_max}\t{fc_ang_min}\t{fc_cos_mat}\t{fc_ang_mat}\t{fc_wt}'
-    fp_fc.write(fc_log_format + '\n')
-    fp_fc.flush()
+    fp_fc = open(fc_fn, open_flag)
+    if last_epoch < 0:
+        fc_log_format = '{epoch}\t{avg_fc_cos_max}\t{avg_fc_ang_min}\t{fc_cos_max}\t{fc_ang_min}\t{fc_cos_mat}\t{fc_ang_mat}\t{fc_wt}'
+        fp_fc.write(fc_log_format + '\n')
+        fp_fc.flush()
 
     # Training
     def train(epoch):
@@ -457,10 +484,12 @@ def main():
 
         return avg_loss, acc, avg_cosine, avg_angle
 
-    for epoch in range(start_epoch, start_epoch+args.num_epochs):
+    # for epoch in range(last_epoch, last_epoch+args.num_epochs):
+    for epoch in range(last_epoch+1, args.num_epochs):
         scheduler.step()
         lr = scheduler.get_lr()
         print('\n---> lr=', lr[0])
+
         train_loss, train_acc, train_cos, train_ang = train(epoch)
 
         train_loss, train_acc, train_cos, train_ang = test(
@@ -529,7 +558,8 @@ def main():
         if test_acc > best_acc:
             print('Saving..')
             state = {
-                'net': net.state_dict(),
+                # 'net': net.state_dict(),
+                'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
                 'acc': test_acc,
                 'epoch': epoch,
             }
@@ -545,7 +575,8 @@ def main():
         if test_acc >= args.save_thresh:
             print('Saving..')
             state = {
-                'net': net.state_dict(),
+                # 'net': net.state_dict(),
+                'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
                 'acc': test_acc,
                 'epoch': epoch,
             }
