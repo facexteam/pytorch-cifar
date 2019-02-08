@@ -4,6 +4,13 @@
 # maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
 from __future__ import print_function
+import os
+import os.path as osp
+import argparse
+import time
+# import json
+
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -14,14 +21,7 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 
-import os
-import os.path as osp
-import argparse
-
-import numpy as np
-
 from models import *
-import time
 
 from models.large_margin_module import LargeMarginModule_cosface, LargeMarginModule_ScaledASoftmax, LargeMarginModule_arcface
 from models.spa_softmax import SpaSoftmax
@@ -257,51 +257,95 @@ def main():
         else:
             net = net.to(device)
 
+    last_epoch = -1
+
     if args.resume:
+        checkpoint = None
         if not args.resume_checkpoint:
             args.resume_checkpoint = args.save_dir
 
+        ckpt_list = []
+
         if osp.isdir(args.resume_checkpoint):
-            ckpt = ''
-            epoch = 0
+            # epoch = -1
+            # ckpt = ''
             best_ckpt = ''
 
+            ckpt_dict = {}
+            epoch_list = []
+
+            dir_list = os.listdir(args.resume_checkpoint)
+
+            # # try to find checkpoint with best ACC
+            # for fn in dir_list:
+            #     if fn.endswith('.t7') and 'best' in fn:
+            #         best_ckpt = fn
+            #         ckpt_list.append(best_ckpt)
+            #         break
+
             # try to find the checkpoint for the last epoch
-            for fn in os.listdir(args.resume_checkpoint):
+            for fn in dir_list:
                 if not fn.endswith('.t7'):
                     continue
-
+                
                 splits = fn.rsplit('-', 2)
-                if splits[1] == 'best':
+                if splits[1]=='best':  # checkpoint with best ACC
                     best_ckpt = fn
+                    # ckpt_list.append(best_ckpt)
                     continue
 
                 t_epoch = int(splits[1])
 
-                if t_epoch > epoch:
-                    epoch = t_epoch
-                    ckpt = fn
+                epoch_list.append(t_epoch)
+                ckpt_dict[str(t_epoch)] = fn
 
-            # if not found,  use model with best acc if available
-            if not ckpt and best_ckpt:
-                ckpt = best_ckpt
+                # if t_epoch > epoch:
+                #     epoch = t_epoch
+                #     ckpt = fn
 
-            if ckpt:
-                args.resume_checkpoint = osp.join(args.resume_checkpoint, ckpt)
-            else:
-                args.resume_checkpoint = ''
+            if len(epoch_list) > 0:
+                epoch_list.sort(reverse=True)
+                for i in epoch_list:
+                    ckpt_list.append(ckpt_dict[str(i)])
+                
+            print("===> Will try to load checkpoint from (one by one, until success): \n", ckpt_list)
+                
+            # # if not found,  use model with best acc if available
+            # if not ckpt and best_ckpt:
+            #     ckpt = best_ckpt
 
-        if not osp.exists(args.resume_checkpoint):
-            print("===> Resume checkpoint not found: ", args.resume_checkpoint)
+            if len(ckpt_list) > 0:
+                for ckpt in ckpt_list: # try to load available/valid checkpoint
+                    ckpt = osp.join(args.resume_checkpoint, ckpt)
+                    print('==> Try to load checkpoint: ', ckpt)
+                    try:
+                        checkpoint = torch.load(ckpt, map_location=device)
+                        break
+                    except Exception as e:
+                        checkpoint = None
+                        print('Failed to load')
+                        print('Exception: \n', str(e))
+        elif osp.isfile(args.resume_checkpoint):
+            # Load checkpoint.
+            print('==> Try to load checkpoint: ', args.resume_checkpoint)
+            checkpoint = torch.load(
+                args.resume_checkpoint, map_location=device)
+        else:
+            print("===> Resume checkpoint is not a valid file/folder: ", args.resume_checkpoint)
             print("===> Exit")
             return
 
-        # Load checkpoint.
-        print('==> Resuming from checkpoint: ', args.resume_checkpoint)
-        checkpoint = torch.load(args.resume_checkpoint)
-        net.load_state_dict(checkpoint['net'])
-        best_acc = checkpoint['acc']
-        last_epoch = checkpoint['epoch']
+        if checkpoint:
+            net.load_state_dict(checkpoint['net'])
+            best_acc = checkpoint['acc']
+            last_epoch = checkpoint['epoch']
+        else:
+            last_epoch = -1
+            args.resume = False
+            print("\n===> Will train from scratch")
+            # print("===> No available checkpoint loaded")
+            # print("===> Exit")
+            # return
 
     criterion = nn.CrossEntropyLoss().to(device)
 
@@ -311,15 +355,15 @@ def main():
     if args.lr_scheduler == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
                                                          T_max=args.num_epochs,
-                                                         eta_min=args.lr_min,
-                                                         last_epoch=last_epoch
-                                                         )
+                                                         eta_min=args.lr_min)
+                                                         #  last_epoch=last_epoch
+                                                        #  )
     else:
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer,
                                                    milestones=step_epochs,
-                                                   gamma=args.lr_factor,
-                                                   last_epoch=last_epoch
-                                                   )
+                                                   gamma=args.lr_factor)
+                                                   #    last_epoch=last_epoch
+                                                #    )
 
     if not osp.exists(args.save_dir):
         os.makedirs(args.save_dir)
@@ -339,14 +383,14 @@ def main():
     fp_log.close()
 
     fp_loss = open(loss_fn, open_flag)
+    loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{test_loss}\t{train_acc}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
     if last_epoch < 0:
-        loss_log_format = '{epoch}\t{lr}\t{train_loss}\t{test_loss}\t{train_acc}\t{test_acc}\t{train_cos}\t{test_cos}\t{train_ang}\t{test_ang}\t{avg_fc_cos_max}\t{avg_fc_ang_min}'
         fp_loss.write(loss_log_format + '\n')
         fp_loss.flush()
 
     fp_fc = open(fc_fn, open_flag)
+    fc_log_format = '{epoch}\t{avg_fc_cos_max}\t{avg_fc_ang_min}\t{fc_cos_max}\t{fc_ang_min}\t{fc_cos_mat}\t{fc_ang_mat}\t{fc_wt}'
     if last_epoch < 0:
-        fc_log_format = '{epoch}\t{avg_fc_cos_max}\t{avg_fc_ang_min}\t{fc_cos_max}\t{fc_ang_min}\t{fc_cos_mat}\t{fc_ang_mat}\t{fc_wt}'
         fp_fc.write(fc_log_format + '\n')
         fp_fc.flush()
 
@@ -485,9 +529,13 @@ def main():
         return avg_loss, acc, avg_cosine, avg_angle
 
     # for epoch in range(last_epoch, last_epoch+args.num_epochs):
-    for epoch in range(last_epoch+1, args.num_epochs):
+    for epoch in range(0, args.num_epochs):
         scheduler.step()
         lr = scheduler.get_lr()
+        if args.resume and epoch <= last_epoch: # reset lr scheduler
+            print('\n---> skip epoch #%d: lr=%f' % (epoch, lr[0]))
+            continue
+
         print('\n---> lr=', lr[0])
 
         train_loss, train_acc, train_cos, train_ang = train(epoch)
@@ -555,37 +603,45 @@ def main():
         fp_fc.flush()
 
         # Save checkpoint.
+        # if test_acc >= args.save_thresh or epoch %:
+        print('Saving..')
+        state = {
+            # 'net': net.state_dict(),
+            'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
+            'acc': test_acc,
+            'epoch': epoch,
+        }
+
+        save_name = osp.join(args.save_dir, '%s-%04d-testacc%4.2f' %
+                             (args.model_prefix, epoch, test_acc * 100))
         if test_acc > best_acc:
-            print('Saving..')
-            state = {
-                # 'net': net.state_dict(),
-                'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
-                'acc': test_acc,
-                'epoch': epoch,
-            }
-
             best_acc = test_acc
+            save_name += '_best'
+        
+        save_name += '.t7'
+        # if test_acc > best_acc:
+        time.sleep(10)
+        torch.save(state, save_name)
+        net.cuda(device)
 
-            if epoch > args.num_epochs/2:
-                time.sleep(10)
-                save_name = osp.join(args.save_dir, '%s-best-acc.t7' %
-                                     (args.model_prefix))
-                torch.save(state, save_name)
+        # # Save checkpoint.
+        # if test_acc > best_acc:
+        #     print('Saving..')
+        #     state = {
+        #         # 'net': net.state_dict(),
+        #         'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
+        #         'acc': test_acc,
+        #         'epoch': epoch,
+        #     }
 
-        if test_acc >= args.save_thresh:
-            print('Saving..')
-            state = {
-                # 'net': net.state_dict(),
-                'net': net.cpu().state_dict(),  # use cpu data to fix cuda OOM when saving
-                'acc': test_acc,
-                'epoch': epoch,
-            }
+        #     best_acc = test_acc
 
-            if epoch > args.num_epochs/2:
-                time.sleep(10)
-                save_name = osp.join(args.save_dir, '%s-%04d-testacc%4.2f.t7' %
-                                     (args.model_prefix, epoch, test_acc*100))
-                torch.save(state, save_name)
+        #     if epoch > args.num_epochs/2:
+        #         time.sleep(10)
+        #         save_name = osp.join(args.save_dir, '%s-best-acc.t7' %
+        #                              (args.model_prefix))
+        #         torch.save(state, save_name)
+                # net.cuda(device)
 
     # fp_log.close()
     fp_loss.close()
@@ -594,3 +650,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
