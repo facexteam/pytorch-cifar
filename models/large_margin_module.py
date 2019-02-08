@@ -11,10 +11,15 @@ import numpy as np
 
 
 class LargeMarginModule_cosface(nn.Module):
-    def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
+    def __init__(self, embedding_net, output_size=10, scale=4, m=0.5):
         super(LargeMarginModule_cosface, self).__init__()
+        assert (output_size > 1 and
+                scale >= 1 and
+                m >= 0)
+
         self.input_size = sum(embedding_net.output_shape)
-        # self.eps = eps
+        assert(self.input_size > 1)
+
         self.scale = scale
         self.m = m
 
@@ -76,13 +81,21 @@ class LargeMarginModule_cosface(nn.Module):
         return self.__class__.__name__ + '(' \
             + 'input_size=' + str(self.input_size) \
             + ', output_size=' + str(self.output_size) \
-            + ', m=' + str(self.m) + ')'
+            + ', scale=' + str(self.scale) \
+            + ', m=' + str(self.m) \
+            + ')'
 
 
 class LargeMarginModule_arcface(nn.Module):
-    def __init__(self, embedding_net, output_size=10, scale=32, m=0.5):
+    def __init__(self, embedding_net, output_size=10, scale=4, m=0.2):
         super(LargeMarginModule_arcface, self).__init__()
+        assert (output_size > 1 and
+                scale >= 1 and
+                m >= 0)
+
         self.input_size = sum(embedding_net.output_shape)
+        assert(self.input_size > 1)
+
         self.output_size = output_size
 
         self.scale = scale
@@ -168,13 +181,22 @@ class LargeMarginModule_arcface(nn.Module):
         return self.__class__.__name__ + '(' \
             + 'input_size=' + str(self.input_size) \
             + ', output_size=' + str(self.output_size) \
-            + ', m=' + str(self.m) + ')'
+            + ', scale=' + str(self.scale) \
+            + ', m=' + str(self.m) \
+            + ')'
 
 
 class LargeMarginModule_ScaledASoftmax(nn.Module):
-    def __init__(self, embedding_net, output_size=10, scale=32, m=4, min_lambda=5.0):
+    def __init__(self, embedding_net, output_size=10, scale=4, m=3, min_lambda=.0):
         super(LargeMarginModule_ScaledASoftmax, self).__init__()
+        assert (output_size > 1 and
+                scale >= 1 and
+                m >= 0 and
+                min_lambda >= 0)
+
         self.input_size = sum(embedding_net.output_shape)
+        assert(self.input_size > 1)
+
         self.output_size = output_size
 
         self.scale = scale
@@ -266,12 +288,20 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         return self.__class__.__name__ + '(' \
             + 'input_size=' + str(self.input_size) \
             + ', output_size=' + str(self.output_size) \
-            + ', m=' + str(self.m) + ')'
+            + ', scale=' + str(self.scale) \
+            + ', m=' + str(self.m) \
+            + ', min_lambda=' + str(self.min_lambda) \
+            + ')'
 
 
 class LargeMarginModule_ASoftmaxLoss(nn.Module):
     def __init__(self, embedding_net, input_size, output_size=10, m=4, min_lambda=5.0):
         super(LargeMarginModule_ASoftmaxLoss, self).__init__()
+        assert (output_size > 1 and
+                input_size > 1 and
+                m >= 0 and
+                min_lambda >= 0)
+
         self.input_size = input_size
         self.output_size = output_size
 
@@ -282,6 +312,10 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         self.gamma = 0.12
         self.power = 1
         self.min_lambda = min_lambda
+
+        assert (self.scale >= 1 and
+                self.m >= 0 and
+                self.min_lambda >= 0)
 
         self.embedding_net = embedding_net
 
@@ -353,4 +387,6 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         return self.__class__.__name__ + '(' \
             + 'input_size=' + str(self.input_size) \
             + ', output_size=' + str(self.output_size) \
-            + ', m=' + str(self.m) + ')'
+            + ', m=' + str(self.m) \
+            + ', min_lambda=' + str(self.min_lambda) \
+            + ')'
