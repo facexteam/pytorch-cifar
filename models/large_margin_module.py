@@ -50,7 +50,7 @@ class LargeMarginModule_cosface(nn.Module):
         # print('---> weight[j].norm (after norm): ',
         #       weight.norm(dim=1))
 
-        cos_theta = F.linear(embedding, weight)
+        cos_theta = F.linear(embedding, weight).clamp(-1, 1)
         # print('---> cos_theta (fc_output): ', cos_theta)
         # print('---> cos_theta[j].norm (fc_output): ',
         #       cos_theta.norm(dim=1))
@@ -143,13 +143,13 @@ class LargeMarginModule_arcface(nn.Module):
         # print('---> weight[j].norm (after norm): ',
         #       weight.norm(dim=1))
 
-        cos_theta = F.linear(embedding, weight)
+        cos_theta = F.linear(embedding, weight).clamp(-1, 1)
 
         # print('---> cos_theta (fc_output): ', cos_theta)
         # print('---> cos_theta[j].norm (fc_output): ',
 
         if self.m > 0:
-            cos_theta = cos_theta.clamp(-1, 1)
+            # cos_theta = cos_theta.clamp(-1, 1)
 
             # theta = cos_theta.data.acos()  # no grad here
             theta = cos_theta.acos()  # theta requires grad here
@@ -250,8 +250,8 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         normalized_ebd = F.normalize(embedding, dim=1)
         normalized_wt = F.normalize(self.linear.weight, dim=1)
 
-        cos_theta = F.linear(normalized_ebd, normalized_wt)
-        cos_theta = cos_theta.clamp(-1, 1)
+        cos_theta = F.linear(normalized_ebd, normalized_wt).clamp(-1, 1)
+        # cos_theta = cos_theta.clamp(-1, 1)
 
         cos_m_theta = self.mlambda[self.m](cos_theta)
         # print('---> cos_theta:', cos_theta)
@@ -357,8 +357,8 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         # cos_theta = F.linear(F.normalize(embedding),
         #                      F.normalize(self.linear.weight))
         # cos_theta = cos_theta.clamp(-1, 1)
-        cos_theta = F.linear(normalized_ebd, normalized_wt)
-        cos_theta = cos_theta.clamp(-1, 1)
+        cos_theta = F.linear(normalized_ebd, normalized_wt).clamp(-1, 1)
+        # cos_theta = cos_theta.clamp(-1, 1)
 
         cos_m_theta = self.mlambda[self.m](cos_theta)
 
