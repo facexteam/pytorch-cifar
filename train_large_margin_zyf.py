@@ -86,6 +86,8 @@ def add_arg_parser():
                         help='loss param: b')
     parser.add_argument('--loss-lambda', type=float, default=5,
                         help='loss param: lambda for A-softmax')
+    parser.add_argument('--dataset', type=str, default='cifar10',
+                        help='name of dataset')
     return parser
 
 
@@ -95,6 +97,12 @@ def main():
 
     # to make 260 to 256, for example
     args.batch_size = args.batch_size // args.data_workers * args.data_workers
+
+    dataset_name = args.dataset.lower()
+    n_classes = 10
+    
+    if dataset_name == 'cifar100':
+        n_classes = 100
 
     if 10000 % args.test_bs != 0:
         print("===> Must have: (10000 %% args.test_bs == 0)")
@@ -142,24 +150,45 @@ def main():
     ])
 
     do_download = True
-    if osp.exists(osp.join(args.cifar_dir, 'cifar-10-python.tar.gz')):
-        print('cifar10 has already been downloaded to ', args.cifar_dir)
-        do_download = False
 
-    trainset = torchvision.datasets.CIFAR10(
-        root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.data_workers)
+    if dataset_name == 'cifar100':
+        if osp.exists(osp.join(args.cifar_dir, 'cifar-100-python.tar.gz')):
+            print('cifar100 has already been downloaded to ', args.cifar_dir)
+            do_download = False
 
-    trainset2 = torchvision.datasets.CIFAR10(
-        root=args.cifar_dir, train=True, download=do_download, transform=transform_test)
-    trainloader_test = torch.utils.data.DataLoader(
-        trainset2, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+        trainset = torchvision.datasets.CIFAR100(
+            root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
+        trainloader = torch.utils.data.DataLoader(
+            trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.data_workers)
 
-    testset = torchvision.datasets.CIFAR10(
-        root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+        trainset2 = torchvision.datasets.CIFAR100(
+            root=args.cifar_dir, train=True, download=do_download, transform=transform_test)
+        trainloader_test = torch.utils.data.DataLoader(
+            trainset2, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+
+        testset = torchvision.datasets.CIFAR100(
+            root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+    else:
+        if osp.exists(osp.join(args.cifar_dir, 'cifar-10-python.tar.gz')):
+            print('cifar10 has already been downloaded to ', args.cifar_dir)
+            do_download = False
+
+        trainset = torchvision.datasets.CIFAR10(
+            root=args.cifar_dir, train=True, download=do_download, transform=transform_train)
+        trainloader = torch.utils.data.DataLoader(
+            trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.data_workers)
+
+        trainset2 = torchvision.datasets.CIFAR10(
+            root=args.cifar_dir, train=True, download=do_download, transform=transform_test)
+        trainloader_test = torch.utils.data.DataLoader(
+            trainset2, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
+
+        testset = torchvision.datasets.CIFAR10(
+            root=args.cifar_dir, train=False, download=do_download, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=args.test_bs, shuffle=False, num_workers=args.test_dw)
 
     # classes = ('plane', 'car', 'bird', 'cat', 'deer',
     #            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -215,39 +244,39 @@ def main():
     if loss_type == 'asoftmax':
         print('===> Using Scaled/Normalized A-softmax loss')
         net = LargeMarginModule_ScaledASoftmax(
-            net, 10, args.loss_scale,
+            net, n_classes, args.loss_scale,
             args.loss_m, args.loss_lambda)
     elif loss_type == 'arcface':
         print('===> Using arcface loss')
         net = LargeMarginModule_arcface(
-            net, 10, args.loss_scale, args.loss_m)
+            net, n_classes, args.loss_scale, args.loss_m)
     elif loss_type.startswith('spa'):
         if loss_type == 'spav2':
             print('===> Using spav2 Softmax loss')
-            net = SpaSoftmax_v2(net, 10, args.loss_scale,
+            net = SpaSoftmax_v2(net, n_classes, args.loss_scale,
                                 args.loss_m, args.loss_b)
         elif loss_type == 'spav3':
             print('===> Using spav3 Softmax loss')
-            net = SpaSoftmax_v3(net, 10, args.loss_scale,
+            net = SpaSoftmax_v3(net, n_classes, args.loss_scale,
                                 args.loss_m, args.loss_n,
                                 args.loss_b)
         elif loss_type == 'spav4':
             print('===> Using spav4 Softmax loss')
-            net = SpaSoftmax_v4(net, 10, args.loss_scale,
+            net = SpaSoftmax_v4(net, n_classes, args.loss_scale,
                                 args.loss_m, args.loss_n,
                                 args.loss_b)
         elif loss_type == 'spav5':
             print('===> Using spav5 Softmax loss')
-            net = SpaSoftmax_v5(net, 10, args.loss_scale,
+            net = SpaSoftmax_v5(net, n_classes, args.loss_scale,
                                 args.loss_m)
         else:
             print('===> Using SPA Softmax loss')
-            net = SpaSoftmax(net, 10, args.loss_scale,
+            net = SpaSoftmax(net, n_classes, args.loss_scale,
                              args.loss_m, args.loss_b)
     else:  # cosface
         print('===> Using cosface loss')
         net = LargeMarginModule_cosface(
-            net, 10, args.loss_scale, args.loss_m)
+            net, n_classes, args.loss_scale, args.loss_m)
 
     if device.startswith('cuda'):
         if len(gpu_ids) > 1:
