@@ -31,7 +31,8 @@ def get_checkpoint_list(root_dir):
             continue
 
         splits = fn.rsplit('-', 2)
-        if splits[1] == 'best':  # checkpoint with best ACC
+        #if splits[1] == 'best':  # checkpoint with best ACC
+        if splits[1] == 'best' or splits[-1].startswith('best'):  # checkpoint with best ACC
             best_ckpt = fn
             # ckpt_list.append(best_ckpt)
             continue
@@ -111,6 +112,7 @@ def mklink_to_best_ckpt(root_dir, best_good_ckpt):
 
 
 def clean_dir(root_dir, verbose=True, delete=False):
+    print("\n===> clean dir", root_dir)
     ckpt_list, best_ckpt = get_checkpoint_list(root_dir)
 
     if verbose:
@@ -142,16 +144,26 @@ def clean_dir(root_dir, verbose=True, delete=False):
 
 
 def clean_all_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
+    print("\n===> clean dir", root_dir)
     dir_list = os.listdir(root_dir)
 
     for _dir in dir_list:
-        full_dir = osp.join(root_dir, _dir)
+        full_dir = osp.abspath(osp.join(root_dir, _dir))
+        print("\n===> process dir", full_dir)
+        print("\n===> is dir", osp.isdir(full_dir))
 
+        #if not osp.isdir(osp.abspath(full_dir)):
         if not osp.isdir(full_dir):
             continue
 
-        if prefix and _dir.startswith(prefix):
-            clean_dir(full_dir)
+        if prefix:
+            if _dir.startswith(prefix):
+                print("\n===> clean sub dir", full_dir)
+               # clean_dir(full_dir)
+                clean_dir(full_dir, delete=delete, verbose=verbose)
+        else:
+            print("\n===> clean sub dir", full_dir)
+            clean_dir(full_dir, delete=delete, verbose=verbose)
 
 
 if __name__ == '__main__':
@@ -163,10 +175,11 @@ if __name__ == '__main__':
         root_dir = sys.argv[1]
 
     if len(sys.argv) > 2:
-        do_delete = sys.argv[2]
+        do_delete = int(sys.argv[2])
 
     if len(sys.argv) > 3:
-        verbose = sys.argv[3]
+        verbose = int(sys.argv[3])
 
     clean_dir(root_dir, delete=do_delete, verbose=verbose)
     clean_all_sub_dir(root_dir, delete=do_delete, verbose=verbose)
+
