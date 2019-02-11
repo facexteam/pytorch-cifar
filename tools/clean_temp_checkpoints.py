@@ -58,8 +58,8 @@ def get_checkpoint_list(root_dir):
 def bisect_ckpt_list(ckpt_list):
     acc_pos = len('testacc')
     best_acc = 0
-    best_fn = ''
-    last_good_fn = ''
+    best_good_ckpt = ''
+    last_good_ckpt = ''
 
     delete_list = []
     # keep_list = []
@@ -73,24 +73,41 @@ def bisect_ckpt_list(ckpt_list):
         splits2 = acc_part.split(sep2, 1)
         acc = float(splits2[0])
 
-        if acc > 1.0 and last_good_fn is '':
-            last_good_fn = fn
+        if acc > 1.0 and last_good_ckpt is '':
+            last_good_ckpt = fn
 
         if best_acc < acc:
             best_acc = acc
-            if best_fn != last_good_fn:
-                delete_list.append(best_fn)
-            best_fn = fn
+            if best_good_ckpt and best_good_ckpt != last_good_ckpt:
+                delete_list.append(best_good_ckpt)
+            best_good_ckpt = fn
         else:
-            if fn != last_good_fn:
+            if fn != last_good_ckpt:
                 delete_list.append(fn)
 
-    return delete_list, best_fn, last_good_fn
+    return delete_list, best_good_ckpt, last_good_ckpt
 
 
-def delete_ckpt_list(root_dir, delete_list):
+def delete_ckpt_list(root_dir, delete_list, verbose=False):
     for fn in delete_list:
-        os.remove(osp.join(root_dir), fn)
+        full_fn = osp.join(root_dir, fn)
+        print('--> delete ', full_fn)
+        os.remove(full_fn)
+
+
+def mklink_to_best_ckpt(root_dir, best_good_ckpt):
+    if not best_good_ckpt:
+        return
+
+    splits = best_good_ckpt.split('-')
+    splits[-2] = 'best'
+    best_ckpt = '-'.join(splits)
+
+    if not osp.isfile(osp.join(root_dir, best_ckpt)):
+        print('\n===> make hard link {} pointing to {}'.format(
+            best_ckpt, best_good_ckpt))
+        os.system('ln -P ' + osp.join(root_dir, best_good_ckpt) +
+                  ' ' + osp.join(root_dir, best_ckpt))
 
 
 def clean_dir(root_dir, verbose=True, delete=False):
@@ -100,24 +117,28 @@ def clean_dir(root_dir, verbose=True, delete=False):
         print("\n===> all checkpoints list: \n", ckpt_list)
         print('===> best_ckpt: ', best_ckpt)
 
-    delete_list, best_fn, last_good_fn = bisect_ckpt_list(ckpt_list)
+    delete_list, best_good_ckpt, last_good_ckpt = bisect_ckpt_list(ckpt_list)
 
     if verbose:
-        print("===> delete_list: \n", ckpt_list)
-        print('===> best_fn: ', best_fn)
-        print('===> last_good_fn: ', last_good_fn)
+        print("===> delete_list: \n", delete_list)
+        print('===> best_good_ckpt: ', best_good_ckpt)
+        print('===> last_good_ckpt: ', last_good_ckpt)
 
         print('===> Is best_ckpt in delete_list:', best_ckpt in delete_list)
-        print('===> Is best_fn in delete_list:', best_fn in delete_list)
-        print('===> Is last_good_fn in delete_list:',
-              last_good_fn in delete_list)
+        print('===> Is best_good_ckpt in delete_list:',
+              best_good_ckpt in delete_list)
+        print('===> Is last_good_ckpt in delete_list:',
+              last_good_ckpt in delete_list)
 
     if delete:
         print("===> delete un-necessary checkpoints")
 
-        delete_ckpt_list(root_dir, delete_list)
+        delete_ckpt_list(root_dir, delete_list, verbose)
 
         print("===> finish deleting")
+
+    if not best_ckpt and best_good_ckpt:
+        mklink_to_best_ckpt(root_dir, best_good_ckpt)
 
 
 def clean_all_sub_dir(root_dir, prefix=None):
@@ -135,8 +156,13 @@ def clean_all_sub_dir(root_dir, prefix=None):
 
 if __name__ == '__main__':
     root_dir = './'
+    do_delete = False
 
     if len(sys.argv) > 1:
         root_dir = sys.argv[1]
 
-    clean_dir(root_dir)
+    if len(sys.argv) > 2:
+        do_delete = sys.argv[2]
+
+    clean_dir(root_dir, delete=do_delete)
+    clean_all_sub_dir(root_dir, delete=do_delete)
