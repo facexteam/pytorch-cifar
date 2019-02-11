@@ -141,7 +141,7 @@ def clean_dir(root_dir, verbose=True, delete=False):
         mklink_to_best_ckpt(root_dir, best_good_ckpt)
 
 
-def clean_all_sub_dir(root_dir, prefix=None):
+def clean_all_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
     dir_list = os.listdir(root_dir)
 
     for _dir in dir_list:
@@ -157,6 +157,7 @@ def clean_all_sub_dir(root_dir, prefix=None):
 if __name__ == '__main__':
     root_dir = './'
     do_delete = False
+    verbose = False
 
     if len(sys.argv) > 1:
         root_dir = sys.argv[1]
@@ -164,5 +165,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 2:
         do_delete = sys.argv[2]
 
-    clean_dir(root_dir, delete=do_delete)
-    clean_all_sub_dir(root_dir, delete=do_delete)
+    if len(sys.argv) > 3:
+        verbose = sys.argv[3]
+
+    clean_dir(root_dir, delete=do_delete, verbose=verbose)
+    clean_all_sub_dir(root_dir, delete=do_delete, verbose=verbose)
