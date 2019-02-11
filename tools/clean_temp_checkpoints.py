@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import os.path as osp
 import sys
+import shutil
 
 
 def get_checkpoint_list(root_dir):
@@ -65,7 +66,12 @@ def bisect_ckpt_list(ckpt_list):
 
     for fn in ckpt_list:
         splits = fn.rsplit('-', 2)
-        acc = float(splits[-1][acc_pos:acc_pos + 5])
+        sep2 = '.'
+        acc_part = splits[-1][acc_pos:]
+        if '_' in acc_part:
+            sep2 = '_'
+        splits2 = acc_part.split(sep2, 1)
+        acc = float(splits2[0])
 
         if acc > 1.0 and last_good_fn is '':
             last_good_fn = fn
@@ -82,18 +88,55 @@ def bisect_ckpt_list(ckpt_list):
     return delete_list, best_fn, last_good_fn
 
 
+def delete_ckpt_list(root_dir, delete_list):
+    for fn in delete_list:
+        os.remove(osp.join(root_dir), fn)
+
+
+def clean_dir(root_dir, verbose=True, delete=False):
+    ckpt_list, best_ckpt = get_checkpoint_list(root_dir)
+
+    if verbose:
+        print("\n===> all checkpoints list: \n", ckpt_list)
+        print('===> best_ckpt: ', best_ckpt)
+
+    delete_list, best_fn, last_good_fn = bisect_ckpt_list(ckpt_list)
+
+    if verbose:
+        print("===> delete_list: \n", ckpt_list)
+        print('===> best_fn: ', best_fn)
+        print('===> last_good_fn: ', last_good_fn)
+
+        print('===> Is best_ckpt in delete_list:', best_ckpt in delete_list)
+        print('===> Is best_fn in delete_list:', best_fn in delete_list)
+        print('===> Is last_good_fn in delete_list:',
+              last_good_fn in delete_list)
+
+    if delete:
+        print("===> delete un-necessary checkpoints")
+
+        delete_ckpt_list(root_dir, delete_list)
+
+        print("===> finish deleting")
+
+
+def clean_all_sub_dir(root_dir, prefix=None):
+    dir_list = os.listdir(root_dir)
+
+    for _dir in dir_list:
+        full_dir = osp.join(root_dir, _dir)
+
+        if not osp.isdir(full_dir):
+            continue
+
+        if prefix and _dir.startswith(prefix):
+            clean_dir(full_dir)
+
+
 if __name__ == '__main__':
     root_dir = './'
 
-    if len(sys.argv > 1):
+    if len(sys.argv) > 1:
         root_dir = sys.argv[1]
 
-    ckpt_list, best_ckpt = get_checkpoint_list(root_dir)
-
-    print("===> all checkpoints list: \n", ckpt_list)
-    print('===> best_ckpt: ', best_ckpt)
-
-    delete_list, best_fn, last_good_fn = bisect_ckpt_list(ckpt_list)
-    print("===> delete_list: \n", ckpt_list)
-    print('===> best_fn: ', best_fn)
-    print('===> last_good_fn: ', last_good_fn)
+    clean_dir(root_dir)
