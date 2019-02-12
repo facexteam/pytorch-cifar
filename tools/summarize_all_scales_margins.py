@@ -17,12 +17,12 @@ def summarize_all_scales_margins(save_prefix,
     m_list.sort()
 
     summ_fields = [
-                   'avg_fc_ang_min',
-                   'train_ang', 'test_ang',
-                   'train_acc', 'test_acc',
-                   'avg_fc_cos_max',
-                   'train_cos', 'test_cos',
-                   'train_loss', 'test_loss',
+        'avg_fc_ang_min',
+        'train_ang', 'test_ang',
+        'train_acc', 'test_acc',
+        'avg_fc_cos_max',
+        'train_cos', 'test_cos',
+        'train_loss', 'test_loss',
     ]
 
     save_fn = save_prefix + '_all_sm.tsv.txt'
@@ -34,7 +34,7 @@ def summarize_all_scales_margins(save_prefix,
 
     main_header_row = '\t'
     for s in scale_list:
-        main_header_row += '\tS_' + str(s) 
+        main_header_row += '\tS_' + str(s)
 
     main_header_row += '\n'
     fp_out.write(main_header_row)
@@ -110,7 +110,7 @@ def summarize_all_scales_margins(save_prefix,
         fp_out.write(sub_header_row)
 
         for m in m_list:
-	    write_line = 'M_%g\t%g' % (m, m)
+            write_line = 'M_%g\t%g' % (m, m)
             if str(m) in all_margin_dict:
                 for s in scale_list:
                     tmp = all_margin_dict[str(m)].get(str(s), None)
@@ -126,6 +126,45 @@ def summarize_all_scales_margins(save_prefix,
 
         fp_out.flush()
 
+    fp_out.write('\n\ntrain_cos-avg_fc_cos_max\n')
+    fp_out.write(sub_header_row)
+
+    for m in m_list:
+        write_line = 'M_%g\t%g' % (m, m)
+        if str(m) in all_margin_dict:
+            for s in scale_list:
+                tmp = all_margin_dict[str(m)].get(str(s), None)
+                if tmp is not None:
+                    write_line += '\t%f' % (float(tmp['train_cos']) -
+                                            float(tmp['avg_fc_cos_max']))
+                else:
+                    write_line += '\tN.A.'
+
+        fp_out.write(write_line+'\n')
+
+    for i in range(lines_per_subtable - len(m_list)):
+        fp_out.write('\n')
+
+    fp_out.flush()
+
+    fp_out.write('\n\ntest_cos-avg_fc_cos_max\n')
+    fp_out.write(sub_header_row)
+
+    for m in m_list:
+        write_line = 'M_%g\t%g' % (m, m)
+        if str(m) in all_margin_dict:
+            for s in scale_list:
+                tmp = all_margin_dict[str(m)].get(str(s), None)
+                if tmp is not None:
+                    write_line += '\t%f' % (
+                        float(tmp['test_cos'] - float(tmp['avg_fc_cos_min'])))
+                else:
+                    write_line += '\tN.A.'
+
+        fp_out.write(write_line+'\n')
+
+    for i in range(lines_per_subtable - len(m_list)):
+        fp_out.write('\n')
     fp_out.close()
 
 
@@ -136,4 +175,3 @@ if __name__ == '__main__':
     m_list = np.arange(0, 1.05, 0.05)
 
     summarize_all_scales_margins(save_prefix, scale_list, m_list)
-
