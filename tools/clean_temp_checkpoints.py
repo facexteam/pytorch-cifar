@@ -31,8 +31,9 @@ def get_checkpoint_list(root_dir):
             continue
 
         splits = fn.rsplit('-', 2)
-        #if splits[1] == 'best':  # checkpoint with best ACC
-        if splits[1] == 'best' or splits[-1].startswith('best'):  # checkpoint with best ACC
+        # if splits[1] == 'best':  # checkpoint with best ACC
+        # checkpoint with best ACC
+        if splits[1] == 'best' or splits[-1].startswith('best'):
             best_ckpt = fn
             # ckpt_list.append(best_ckpt)
             continue
@@ -152,7 +153,7 @@ def clean_all_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
         print("\n===> process dir", full_dir)
         print("\n===> is dir", osp.isdir(full_dir))
 
-        #if not osp.isdir(osp.abspath(full_dir)):
+        # if not osp.isdir(osp.abspath(full_dir)):
         if not osp.isdir(full_dir):
             continue
 
@@ -166,10 +167,34 @@ def clean_all_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
             clean_dir(full_dir, delete=delete, verbose=verbose)
 
 
+def clean_all_sub_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
+    print("\n===> clean dir", root_dir)
+    dir_list = os.listdir(root_dir)
+
+    for _dir in dir_list:
+        full_dir = osp.abspath(osp.join(root_dir, _dir))
+        print("\n===> process dir", full_dir)
+        print("\n===> is dir", osp.isdir(full_dir))
+
+        # if not osp.isdir(osp.abspath(full_dir)):
+        if not osp.isdir(full_dir):
+            continue
+
+        if prefix:
+            if _dir.startswith(prefix):
+                print("\n===> clean sub dir", full_dir)
+               # clean_dir(full_dir)
+                clean_all_sub_dir(full_dir, delete=delete, verbose=verbose)
+        else:
+            print("\n===> clean sub dir", full_dir)
+            clean_all_sub_dir(full_dir, delete=delete, verbose=verbose)
+
+
 if __name__ == '__main__':
     root_dir = './'
     do_delete = False
     verbose = False
+    prefix = None
 
     if len(sys.argv) > 1:
         root_dir = sys.argv[1]
@@ -180,6 +205,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         verbose = int(sys.argv[3])
 
+    if len(sys.argv) > 4:
+        prefix = sys.argv[4]
+
     clean_dir(root_dir, delete=do_delete, verbose=verbose)
     clean_all_sub_dir(root_dir, delete=do_delete, verbose=verbose)
-
+    clean_all_sub_sub_dir(root_dir, prefix=prefix,
+                          delete=do_delete, verbose=verbose)
