@@ -29,6 +29,7 @@ from models.spa_softmax_v2 import SpaSoftmax_v2
 from models.spa_softmax_v3 import SpaSoftmax_v3
 from models.spa_softmax_v4 import SpaSoftmax_v4
 from models.spa_softmax_v5 import SpaSoftmax_v5
+from models.spa_softmax_v6 import SpaSoftmax_v6
 
 
 def add_arg_parser():
@@ -75,7 +76,7 @@ def add_arg_parser():
     parser.add_argument('--no-progress-bar', dest='progress_bar', action='store_false',
                         help='whether to show progress bar')
     parser.add_argument('--loss-type', type=str, default='cosface',
-                        help='loss type: ["a-softmax", "cosface", "arcface", "spa", "spav2", "spav3", "spav4", "spav5"]')
+                        help='loss type: ["a-softmax", "cosface", "arcface", "spa", "spav2", "spav3", "spav4", "spav5", "spav6"]')
     parser.add_argument('--loss-scale', type=float, default=32,
                         help='loss param: scale')
     parser.add_argument('--loss-m', type=float, default=0.35,
@@ -269,6 +270,10 @@ def main():
             print('===> Using spav5 Softmax loss')
             net = SpaSoftmax_v5(net, n_classes, args.loss_scale,
                                 args.loss_m)
+        elif loss_type == 'spav6':
+            print('===> Using spav6 Softmax loss')
+            net = SpaSoftmax_v6(net, n_classes, args.loss_scale,
+                                args.loss_m, args.loss_n)
         else:
             print('===> Using SPA Softmax loss')
             net = SpaSoftmax(net, n_classes, args.loss_scale,
