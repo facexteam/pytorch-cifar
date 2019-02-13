@@ -59,8 +59,8 @@ def summarize_all_scales_margins(save_prefix,
         print('\n---> load tsv file:', tsv_fn)
 
         field_keys, tsv_lines = load_tsv(tsv_fn)
-        print('---> field_keys:', field_keys)
-        print('---> tsv_lines:', tsv_lines)
+        # print('---> field_keys:', field_keys)
+        # print('---> tsv_lines:', tsv_lines)
 
         tsv_line_dict = {}
         for line in tsv_lines:
@@ -160,7 +160,7 @@ def summarize_all_scales_margins(save_prefix,
                 tmp = all_margin_dict[str(m)].get(str(s), None)
                 if tmp is not None:
                     write_line += '\t%f' % (
-                        float(tmp['test_cos'])- float(tmp['avg_fc_cos_max']))
+                        float(tmp['test_cos']) - float(tmp['avg_fc_cos_max']))
                 else:
                     write_line += '\tN.A.'
 

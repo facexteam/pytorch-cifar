@@ -41,7 +41,7 @@ def parse_log(log_fn, fp, s, m, write_head=1, must_last_line=0):
                 splits = line.strip().split()
 
                 last_field = float(splits[-1])
-                print(last_field)
+                # print(last_field)
 
                 if last_field > 0:
                     write_line = line
@@ -194,4 +194,3 @@ if __name__ == '__main__':
                       scale_list, m_list, save_prefix)
 
     # summarize_all_scales_margins(save_prefix, scale_list, m_list)
-
