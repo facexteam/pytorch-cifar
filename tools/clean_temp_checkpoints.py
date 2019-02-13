@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import os.path as osp
 import sys
-import shutil
+import time
 
 
 def get_checkpoint_list(root_dir):
@@ -94,7 +94,11 @@ def delete_ckpt_list(root_dir, delete_list, verbose=False):
     for fn in delete_list:
         full_fn = osp.join(root_dir, fn)
         print('--> delete ', full_fn)
-        os.remove(full_fn)
+        try:
+            os.remove(full_fn)
+#            time.sleep(1)
+        except Exception as e:
+            print('---> excetption: ', e)
 
 
 def mklink_to_best_ckpt(root_dir, best_good_ckpt):
@@ -110,6 +114,7 @@ def mklink_to_best_ckpt(root_dir, best_good_ckpt):
             best_ckpt, best_good_ckpt))
         os.system('ln -P ' + osp.join(root_dir, best_good_ckpt) +
                   ' ' + osp.join(root_dir, best_ckpt))
+#        time.sleep(1)
 
 
 def clean_dir(root_dir, verbose=True, delete=False):
@@ -182,12 +187,19 @@ def clean_all_sub_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
 
         if prefix:
             if _dir.startswith(prefix):
-                print("\n===> clean sub dir", full_dir)
                # clean_dir(full_dir)
-                clean_all_sub_dir(full_dir, delete=delete, verbose=verbose)
+                for _dir2 in os.listdir(full_dir):
+                    if _dir2.startswith('experiment'):
+                        print("\n===> clean sub dir",
+                              osp.join(full_dir, _dir2))
+                        clean_all_sub_dir(
+                            osp.join(full_dir, _dir2), delete=delete, verbose=verbose)
         else:
-            print("\n===> clean sub dir", full_dir)
-            clean_all_sub_dir(full_dir, delete=delete, verbose=verbose)
+            for _dir2 in os.listdir(full_dir):
+                if _dir2.startswith('experiment'):
+                    print("\n===> clean sub dir", osp.join(full_dir, _dir2))
+                    clean_all_sub_dir(
+                        osp.join(full_dir, _dir2), delete=delete, verbose=verbose)
 
 
 if __name__ == '__main__':
@@ -208,7 +220,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 4:
         prefix = sys.argv[4]
 
-    clean_dir(root_dir, delete=do_delete, verbose=verbose)
-    clean_all_sub_dir(root_dir, delete=do_delete, verbose=verbose)
+    #clean_dir(root_dir, delete=do_delete, verbose=verbose)
+    #clean_all_sub_dir(root_dir, delete=do_delete, verbose=verbose)
     clean_all_sub_sub_dir(root_dir, prefix=prefix,
                           delete=do_delete, verbose=verbose)
+

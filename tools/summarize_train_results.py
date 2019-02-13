@@ -9,10 +9,13 @@ import numpy as np
 from summarize_all_scales_margins import summarize_all_scales_margins
 
 
-def parse_log(log_fn, fp, s, m, write_head=1):
+def parse_log(log_fn, fp, s, m, write_head=1, must_last_line=0):
     print('---> Parsing log file: ', log_fn)
     line_cnt = 0
     found = 0
+
+    write_line = None
+    line_idx = 0
 
     with open(log_fn, 'r') as fp_log:
         if write_head:
@@ -21,13 +24,39 @@ def parse_log(log_fn, fp, s, m, write_head=1):
                      line.replace(' ', ''))
             write_head = 0
 
-        for line in fp_log:
-            line_cnt += 1
-            if line.startswith('199'):
-                fp.write('Lmcos-v1\t%d\t%g\t200\t' %
-                         (s, m) + (line[3:].strip().replace(' ', ''))+'\n')
+        if must_last_line:
+            for line in fp_log:
+                line_cnt += 1
+                if line.startswith('199'):
+                    fp.write('Lmcos-v1\t%d\t%g\t200\t' %
+                             (s, m) + (line[3:].strip().replace(' ', ''))+'\n')
+                    found = 1
+                    break
+        else:
+            for line in fp_log:
+                line_cnt += 1
+                if line_cnt == 1:
+                    continue
+
+                splits = line.strip().split()
+
+                last_field = float(splits[-1])
+                print(last_field)
+
+                if last_field > 0:
+                    write_line = line
+                    line_idx = line_cnt
+
+                # if line.startswith('199'):
+                #     fp.write('Lmcos-v1\t%d\t%g\t200\t' %
+                #              (s, m) + (line[3:].strip().replace(' ', ''))+'\n')
+                #     found = 1
+                #     break
+
+            if line_idx > 0:
+                fp.write('Lmcos-v1\t%d\t%g\t' %
+                         (s, m) + (write_line.strip().replace(' ', ''))+'\n')
                 found = 1
-                break
 
         print('\t%d lines parsed' % line_cnt)
 
@@ -165,3 +194,4 @@ if __name__ == '__main__':
                       scale_list, m_list, save_prefix)
 
     # summarize_all_scales_margins(save_prefix, scale_list, m_list)
+

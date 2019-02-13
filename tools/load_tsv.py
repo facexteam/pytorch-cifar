@@ -23,6 +23,7 @@ def load_tsv(tsv_fn, with_header=True, verbose=False):
         line_cnt += 1
         if line_cnt == 1:
             splits = line.strip().split('\t')
+            #splits = line.strip().split()
 
             if with_header:
                 for val in splits:
