@@ -36,7 +36,7 @@ def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--net', default='resnet20_cifar10_nofc',
                         type=str, help='network architeture')
-    parser.add_argument('--ebd-size', default=32,
+    parser.add_argument('--emb-size', default=32,
                         type=int, help='embedding size for some network architeture')
     parser.add_argument('--gpu-ids', default='0',
                         type=str, help='which GPUs to train on, set to "0,1,2" to use multiple GPUs')
@@ -240,19 +240,19 @@ def main():
         net = ResNet110_cifar10_nofc()
     elif net_name == 'ResNet20_cifar10_fc'.lower():
         print('===> Network: ResNet20_cifar10_fc')
-        net = ResNet20_cifar10_fc(args.ebd_size)
+        net = ResNet20_cifar10_fc(args.emb_size)
     elif net_name == 'ResNet32_cifar10_fc'.lower():
         print('===> Network: ResNet32_cifar10_fc')
-        net = ResNet32_cifar10_fc(args.ebd_size)
+        net = ResNet32_cifar10_fc(args.emb_size)
     elif net_name == 'ResNet44_cifar10_fc'.lower():
         print('===> Network: ResNet44_cifar10_fc')
-        net = ResNet44_cifar10_fc(args.ebd_size)
+        net = ResNet44_cifar10_fc(args.emb_size)
     if net_name == 'ResNet56_cifar10_fc'.lower():
         print('===> Network: ResNet56_cifar10_fc')
-        net = ResNet56_cifar10_fc(args.ebd_size)
+        net = ResNet56_cifar10_fc(args.emb_size)
     elif net_name == 'ResNet110_cifar10_fc'.lower():
         print('===> Network: ResNet110_cifar10_fc')
-        net = ResNet110_cifar10_fc(args.ebd_size)
+        net = ResNet110_cifar10_fc(args.emb_size)
     else:
         print('===> Network: ResNet20_cifar10_nofc')
         net = ResNet20_cifar10_nofc()
