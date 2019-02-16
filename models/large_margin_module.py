@@ -6,7 +6,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .resnet import BasicBlock
 import numpy as np
 
 
@@ -22,37 +21,44 @@ class LargeMarginModule_cosface(nn.Module):
 
         self.scale = scale
         self.m = m
+        self.output_size = output_size
 
         self.embedding_net = embedding_net
-        self.linear = nn.Linear(self.input_size, output_size, bias=False)
+        self.linear = nn.Linear(self.input_size, self.output_size, bias=False)
 
     def get_fc_weights(self):
         wt = self.linear.weight.clone().detach()
         return wt
 
+    def set_fc_weights(self, wt):
+        self.linear.weight.data.copy_(wt)
+
+    def set_fc_weights_to_ones(self):
+        self.linear.weight.data.fill_(1.0)
+
     def forward(self, x, targets):
         embedding = self.embedding_net(x)
 
         # print('\n===> In LargeMarginModule_cosface.forward()\n')
-        # print('---> emb (before norm): ', embedding)
-        # print('---> emb[j].norm (before norm): ', embedding.norm(dim=1))
-        # print('---> weight (before norm): ', self.linear.weight)
-        # print('---> weight[j].norm (before norm): ',
+        # print('---> emb (before norm):\n', embedding)
+        # print('---> emb[j].norm (before norm):\n', embedding.norm(dim=1))
+        # print('---> weight (before norm):\n', self.linear.weight)
+        # print('---> weight[j].norm (before norm):\n',
         #       self.linear.weight.norm(dim=1))
 
         # do L2 normalization
         embedding = F.normalize(embedding, dim=1)
-        # print('---> emb (after norm): ', embedding)
-        # print('---> emb[j].norm (after norm): ', embedding.norm(dim=1))
+        # print('---> emb (after norm):\n', embedding)
+        # print('---> emb[j].norm (after norm):\n', embedding.norm(dim=1))
 
         weight = F.normalize(self.linear.weight, dim=1)
-        # print('---> weight (after norm): ', weight)
-        # print('---> weight[j].norm (after norm): ',
+        # print('---> weight (after norm):\n', weight)
+        # print('---> weight[j].norm (after norm):\n',
         #       weight.norm(dim=1))
 
         cos_theta = F.linear(embedding, weight).clamp(-1, 1)
-        # print('---> cos_theta (fc_output): ', cos_theta)
-        # print('---> cos_theta[j].norm (fc_output): ',
+        # print('---> cos_theta (fc_output):\n', cos_theta)
+        # print('---> cos_theta[j].norm (fc_output):\n',
         #       cos_theta.norm(dim=1))
 
         if self.m > 0:
@@ -62,7 +68,7 @@ class LargeMarginModule_cosface(nn.Module):
             #     one_hot[i][targets[i]] = 1
             one_hot.scatter_(1, targets.view(-1, 1), 1)
 
-            # print('---> one_hot after twister: ', one_hot)
+            # print('---> one_hot after twister:\n', one_hot)
 
             # one_hot.to(device)
 
@@ -70,9 +76,9 @@ class LargeMarginModule_cosface(nn.Module):
         else:
             output = cos_theta * self.scale
 
-        # print('---> output (cos_theta after twister): ', output)
+        # print('---> output (cos_theta after twister):\n', output)
         # print(
-        #     '---> output[j].norm (cos_theta after twister): ',
+        #     '---> output[j].norm (cos_theta after twister):\n',
         #     output.norm(dim=1))
 
         return output, cos_theta
@@ -109,12 +115,18 @@ class LargeMarginModule_arcface(nn.Module):
         #     self.output_size, self.input_size))
         # nn.init.xavier_uniform_(self.weight)
 
-        self.linear = nn.Linear(self.input_size, output_size, bias=False)
+        self.linear = nn.Linear(self.input_size, self.output_size, bias=False)
         # self.weight = self.linear.weight
 
     def get_fc_weights(self):
         wt = self.linear.weight.clone().detach()
         return wt
+
+    def set_fc_weights(self, wt):
+        self.linear.weight.data.copy_(wt)
+
+    def set_fc_weights_to_ones(self):
+        self.linear.weight.data.fill_(1.0)
 
     def forward(self, x, targets):
         # print('===> In LargeMarginModule_arcface.forward()')
@@ -135,18 +147,18 @@ class LargeMarginModule_arcface(nn.Module):
         # do L2 normalization
 
         embedding = F.normalize(embedding, dim=1)
-        # print('---> emb (after norm): ', embedding)
-        # print('---> emb[j].norm (after norm): ', embedding.norm(dim=1))
+        # print('---> emb (after norm):\n', embedding)
+        # print('---> emb[j].norm (after norm):\n', embedding.norm(dim=1))
 
         weight = F.normalize(self.linear.weight, dim=1)
-        # print('---> weight (after norm): ', weight)
-        # print('---> weight[j].norm (after norm): ',
+        # print('---> weight (after norm):\n', weight)
+        # print('---> weight[j].norm (after norm):\n',
         #       weight.norm(dim=1))
 
         cos_theta = F.linear(embedding, weight).clamp(-1, 1)
 
-        # print('---> cos_theta (fc_output): ', cos_theta)
-        # print('---> cos_theta[j].norm (fc_output): ',
+        # print('---> cos_theta (fc_output):\n', cos_theta)
+        # print('---> cos_theta[j].norm (fc_output):\n',
 
         if self.m > 0:
             # cos_theta = cos_theta.clamp(-1, 1)
@@ -214,7 +226,7 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
         # self.weight = nn.Parameter(torch.Tensor(
         #     self.output_size, self.input_size))
         # nn.init.xavier_uniform_(self.weight)
-        self.linear = nn.Linear(self.input_size, output_size, bias=False)
+        self.linear = nn.Linear(self.input_size, self.output_size, bias=False)
 
         # duplication formula
         # refer to:  Double-angle, triple-angle, and half-angle formulae
@@ -231,6 +243,12 @@ class LargeMarginModule_ScaledASoftmax(nn.Module):
     def get_fc_weights(self):
         wt = self.linear.weight.clone().detach()
         return wt
+
+    def set_fc_weights(self, wt):
+        self.linear.weight.data.copy_(wt)
+
+    def set_fc_weights_to_ones(self):
+        self.linear.weight.data.fill_(1.0)
 
     def forward(self, x, targets):
         # print('===> In LargeMarginModule_arcface.forward()')
@@ -313,8 +331,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         self.power = 1
         self.min_lambda = min_lambda
 
-        assert (self.scale >= 1 and
-                self.m >= 0 and
+        assert (self.m >= 0 and
                 self.min_lambda >= 0)
 
         self.embedding_net = embedding_net
@@ -324,7 +341,7 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
         # self.weight = nn.Parameter(torch.Tensor(
         #     self.output_size, self.input_size))
         # nn.init.xavier_uniform_(self.weight)
-        self.linear = nn.Linear(self.input_size, output_size, bias=False)
+        self.linear = nn.Linear(self.input_size, self.output_size, bias=False)
 
         # duplication formula
         self.mlambda = [
@@ -339,6 +356,12 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
     def get_fc_weights(self):
         wt = self.linear.weight.clone().detach()
         return wt
+
+    def set_fc_weights(self, wt):
+        self.linear.weight.data.copy_(wt)
+
+    def set_fc_weights_to_ones(self):
+        self.linear.weight.data.fill_(1.0)
 
     def forward(self, x, targets):
         embedding = self.embedding_net(x)
@@ -390,3 +413,80 @@ class LargeMarginModule_ASoftmaxLoss(nn.Module):
             + ', m=' + str(self.m) \
             + ', min_lambda=' + str(self.min_lambda) \
             + ')'
+
+
+if __name__ == '__main__':
+
+    class IdentityModule(nn.Module):
+        def __init__(self, output_size=64):
+            super(IdentityModule, self).__init__()
+            self.output_shape = (output_size,)
+
+        def forward(self, x):
+            return x
+
+    def infer(net, data, targets):
+        print('===> input data: \n', data)
+        print('===> targets: \n', targets)
+
+        out = net(data, targets)
+
+        print('===> output of net(data):\n')
+
+        if isinstance(out, tuple) and len(out) == 2:
+            pred, cos_theta = out
+            print('---> pred (s*biased_cos_theta): \n', pred)
+            print('---> cos_theta: \n', cos_theta)
+        else:
+            pred = out
+            cos_theta = None
+            print('---> pred (fc): \n', pred)
+            print('---> cos_theta: \n', cos_theta)
+
+    emb_size = 20
+    output_size = 10
+    scale = 8
+    m_asm = 3
+
+    #dummpy_data = torch.ones(3, emb_size)
+    dummpy_data = torch.zeros(3, emb_size)
+    for i, row in enumerate(dummpy_data):
+        # print('row[{}]: {}'.format(i, row))
+        for j in range(len(row)):
+            if j % 2 == 0:
+                row[j] = 1
+
+        # print('row[{}]: {}'.format(i, row))
+    dummpy_targets = torch.tensor([0, 1, 2])
+
+    print('\n#=============================')
+    print('\n===> Testing cosface net with dummy data')
+    net = IdentityModule(emb_size)
+    net = LargeMarginModule_cosface(net, output_size, scale)
+    net.set_fc_weights_to_ones()
+    print('net:\n', net)
+    infer(net, dummpy_data, dummpy_targets)
+
+    print('\n#=============================')
+    print('\n===> Testing arcface net with dummy data')
+    net = IdentityModule(emb_size)
+    net = LargeMarginModule_arcface(net, output_size, scale)
+    net.set_fc_weights_to_ones()
+    print('net:\n', net)
+    infer(net, dummpy_data, dummpy_targets)
+
+    print('\n#=============================')
+    print('\n===> Testing ScaledASoftmax net with dummy data')
+    net = IdentityModule(emb_size)
+    net = LargeMarginModule_ScaledASoftmax(net, output_size, scale, m_asm)
+    net.set_fc_weights_to_ones()
+    print('net:\n', net)
+    infer(net, dummpy_data, dummpy_targets)
+
+    print('\n#=============================')
+    print('\n===> Testing ASoftmaxLoss net with dummy data')
+    net = IdentityModule(emb_size)
+    net = LargeMarginModule_ASoftmaxLoss(net, emb_size, output_size, m_asm)
+    net.set_fc_weights_to_ones()
+    print('net:\n', net)
+    infer(net, dummpy_data, dummpy_targets)

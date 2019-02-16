@@ -283,6 +283,8 @@ def main():
         net = LargeMarginModule_cosface(
             net, n_classes, args.loss_scale, args.loss_m)
 
+    print('\n===> net params: ', net)
+        
     if device.startswith('cuda'):
         if len(gpu_ids) > 1:
             net = torch.nn.DataParallel(net, device_ids=gpu_ids)
