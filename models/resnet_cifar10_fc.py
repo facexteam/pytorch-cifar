@@ -89,4 +89,4 @@ def test(output_size=32):
     print('    net output.shape:\n', y.shape)
 
 
-test(32)
+# test(32)
