@@ -232,7 +232,7 @@ def main():
     elif net_name == 'ResNet44_cifar10_nofc'.lower():
         print('===> Network: ResNet44_cifar10_nofc')
         net = ResNet44_cifar10_nofc()
-    if net_name == 'ResNet56_cifar10_nofc'.lower():
+    elif net_name == 'ResNet56_cifar10_nofc'.lower():
         print('===> Network: ResNet56_cifar10_nofc')
         net = ResNet56_cifar10_nofc()
     elif net_name == 'ResNet110_cifar10_nofc'.lower():
@@ -247,7 +247,7 @@ def main():
     elif net_name == 'ResNet44_cifar10_fc'.lower():
         print('===> Network: ResNet44_cifar10_fc')
         net = ResNet44_cifar10_fc(args.emb_size)
-    if net_name == 'ResNet56_cifar10_fc'.lower():
+    elif net_name == 'ResNet56_cifar10_fc'.lower():
         print('===> Network: ResNet56_cifar10_fc')
         net = ResNet56_cifar10_fc(args.emb_size)
     elif net_name == 'ResNet110_cifar10_fc'.lower():
