@@ -91,6 +91,8 @@ def add_arg_parser():
                         help='loss param: lambda for A-softmax')
     parser.add_argument('--dataset', type=str, default='cifar10',
                         help='name of dataset')
+    parser.add_argument('--freeze-fc', type=int, default=1,
+                        help='whether to freeze last fc or not')
     return parser
 
 
@@ -103,7 +105,7 @@ def main():
 
     dataset_name = args.dataset.lower()
     n_classes = 10
-    
+
     if dataset_name == 'cifar100':
         n_classes = 100
 
@@ -347,7 +349,7 @@ def main():
             for fn in dir_list:
                 if not fn.endswith('.t7'):
                     continue
-                
+
                 splits = fn.rsplit('-', 2)
                 if splits[1]=='best':  # checkpoint with best ACC
                     best_ckpt = fn
@@ -367,9 +369,9 @@ def main():
                 epoch_list.sort(reverse=True)
                 for i in epoch_list:
                     ckpt_list.append(ckpt_dict[str(i)])
-                
+
             print("===> Will try to load checkpoint from (one by one, until success): \n", ckpt_list)
-                
+
             # # if not found,  use model with best acc if available
             # if not ckpt and best_ckpt:
             #     ckpt = best_ckpt
@@ -390,6 +392,7 @@ def main():
             print('==> Try to load checkpoint: ', args.resume_checkpoint)
             checkpoint = torch.load(
                 args.resume_checkpoint, map_location=device)
+            checkpoint['epoch'] = -1
         else:
             print("===> Resume checkpoint is not a valid file/folder: ", args.resume_checkpoint)
             print("===> Exit")
@@ -409,10 +412,12 @@ def main():
 
     criterion = nn.CrossEntropyLoss().to(device)
 
-    # optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                          momentum=args.mom, weight_decay=args.wd)
-    optimizer = optim.SGD(net.embedding_net.parameters(), lr=args.lr,
-                          momentum=args.mom, weight_decay=args.wd)
+    if not args.freeze_fc:
+	    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+				  momentum=args.mom, weight_decay=args.wd)
+    else:
+	    optimizer = optim.SGD(net.embedding_net.parameters(), lr=args.lr,
+				  momentum=args.mom, weight_decay=args.wd)
 
     if args.lr_scheduler == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
@@ -681,7 +686,7 @@ def main():
         if test_acc > best_acc:
             best_acc = test_acc
             save_name += '_best'
-        
+
         save_name += '.t7'
         # if test_acc > best_acc:
         time.sleep(10)
@@ -714,4 +719,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

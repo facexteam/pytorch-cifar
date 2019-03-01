@@ -145,17 +145,39 @@ class LargeMarginModule_arcface(nn.Module):
         # print('---> cos_theta:', cos_theta)
         # print('---> cos_theta.requires_grad:', cos_theta.requires_grad)
         # do L2 normalization
-
+        embedding_nonorm = embedding
         embedding = F.normalize(embedding, dim=1)
+
         # print('---> emb (after norm):\n', embedding)
         # print('---> emb[j].norm (after norm):\n', embedding.norm(dim=1))
+        _nans = torch.isnan(embedding)
+        nans_sum = _nans.sum()  # theta requires grad here
+        if nans_sum:
+       	    print('---> %d nans found in embedding' % nans_sum.item()) 
+       	    print('---> embedding_nonorm[:10]:', embedding_nonorm[:10]) 
+       	    print('---> embedding[:10]:', embedding[:10]) 
 
         weight = F.normalize(self.linear.weight, dim=1)
         # print('---> weight (after norm):\n', weight)
         # print('---> weight[j].norm (after norm):\n',
         #       weight.norm(dim=1))
+        _nans = torch.isnan(weight)
+        nans_sum = _nans.sum()  # theta requires grad here
+        if nans_sum:
+       	    print('---> %d nans found in weight' % nans_sum.item()) 
+       	    print('---> weight_nonorm[:10]:', self.linear.weight[:10]) 
+       	    print('---> weight[:10]:', weight[:10]) 
 
         cos_theta = F.linear(embedding, weight).clamp(-1, 1)
+        _ones = (cos_theta==1.0)
+        ones_sum = _ones.sum()  # theta requires grad here
+        if ones_sum:
+       	    print('---> %d ones found in cos_theta' % ones_sum.item()) 
+       	    #print('---> embedding[_ones]:', embedding[_ones][:10]) 
+       	    #print('---> weight[_ones]:', weight[_ones][:10]) 
+       	    print('---> embedding[:10]:', embedding[:10]) 
+       	    print('---> weight[:10]:', weight[:10]) 
+       	    print('---> cos_theta[_ones]:', cos_theta[_ones][:10]) 
 
         # print('---> cos_theta (fc_output):\n', cos_theta)
         # print('---> cos_theta[j].norm (fc_output):\n',
@@ -168,6 +190,11 @@ class LargeMarginModule_arcface(nn.Module):
             # theta.requires_grad_()
             # print('---> theta:', theta)
             # print('---> theta.requires_grad:', theta.requires_grad)
+
+            # _nan = torch.isnan(theta).sum()  # theta requires grad here
+            # if _nan:
+            #     print('---> NaN found in theta') 
+
 
             # --------------------------- convert targets to one-hot ---------------------------
             one_hot = torch.zeros_like(cos_theta)
