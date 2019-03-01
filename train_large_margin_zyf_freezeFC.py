@@ -91,6 +91,8 @@ def add_arg_parser():
                         help='loss param: lambda for A-softmax')
     parser.add_argument('--dataset', type=str, default='cifar10',
                         help='name of dataset')
+    parser.add_argument('--freeze-fc', type=int, default=1,
+                        help='whether to freeze last fc or not')
     return parser
 
 
@@ -390,6 +392,7 @@ def main():
             print('==> Try to load checkpoint: ', args.resume_checkpoint)
             checkpoint = torch.load(
                 args.resume_checkpoint, map_location=device)
+            checkpoint['epoch'] = -1
         else:
             print("===> Resume checkpoint is not a valid file/folder: ", args.resume_checkpoint)
             print("===> Exit")
@@ -409,8 +412,12 @@ def main():
 
     criterion = nn.CrossEntropyLoss().to(device)
 
-    optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                          momentum=args.mom, weight_decay=args.wd)
+    if not args.freeze_fc:
+	    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+				  momentum=args.mom, weight_decay=args.wd)
+    else:
+	    optimizer = optim.SGD(net.embedding_net.parameters(), lr=args.lr,
+				  momentum=args.mom, weight_decay=args.wd)
 
     if args.lr_scheduler == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
@@ -484,9 +491,9 @@ def main():
 
             loss = criterion(outputs, targets)
             loss.backward()
-            net.linear.weight.requires_grad = False
+            # net.linear.weight.requires_grad = False
             optimizer.step()
-            net.linear.weight.requires_grad = True
+            # net.linear.weight.requires_grad = True
 
             idx_mat = targets.reshape(-1, 1)
             # print('---> idx_mat:', idx_mat)
@@ -712,4 +719,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

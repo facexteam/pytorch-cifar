@@ -186,7 +186,8 @@ def clean_all_sub_sub_dir(root_dir, prefix=None, verbose=False, delete=False):
             continue
 
         if prefix:
-            if _dir.startswith(prefix):
+            #if _dir.startswith(prefix):
+            if prefix in _dir:
                # clean_dir(full_dir)
                 for _dir2 in os.listdir(full_dir):
                     if _dir2.startswith('experiment'):
