@@ -409,7 +409,9 @@ def main():
 
     criterion = nn.CrossEntropyLoss().to(device)
 
-    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+    # optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                          momentum=args.mom, weight_decay=args.wd)
+    optimizer = optim.SGD(net.embedding_net.parameters(), lr=args.lr,
                           momentum=args.mom, weight_decay=args.wd)
 
     if args.lr_scheduler == 'cosine':
@@ -484,9 +486,9 @@ def main():
 
             loss = criterion(outputs, targets)
             loss.backward()
-            net.linear.weight.requires_grad = False
+            # net.linear.weight.requires_grad = False
             optimizer.step()
-            net.linear.weight.requires_grad = True
+            # net.linear.weight.requires_grad = True
 
             idx_mat = targets.reshape(-1, 1)
             # print('---> idx_mat:', idx_mat)
