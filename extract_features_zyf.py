@@ -41,7 +41,7 @@ def add_arg_parser():
                         help='workers to load test data')
     parser.add_argument('--cifar-dir', type=str, default='./data',
                         help='path to save downloaded cifar dataset')
-    parser.add_argument('--save-dir', type=str, default='./checkpoints',
+    parser.add_argument('--save-dir', type=str, default='./rlt-features',
                         help='path to save checkpoints')
     parser.add_argument('--dataset', type=str, default='cifar10',
                         help='name of dataset')
@@ -347,11 +347,15 @@ def main():
     total_features = np.vstack(total_features)
     print('===> total_features.shape=', total_features.shape)
 
+    save_fn = args.dataset + '_features.npy'
+    save_fn = osp.join(args.save_dir, save_fn)
+    np.save(save_fn, total_features)
+
 
 if __name__ == '__main__':
     augments = [
         '--net', 'resnet20_cifar10_nofc',
-        '--test-bs', '100',
+        '--test-bs', '20',
         '--test-dw', '4',
         '--checkpoint', './res20-cifar-best.t7',
         '--cifar-dir', './data',
