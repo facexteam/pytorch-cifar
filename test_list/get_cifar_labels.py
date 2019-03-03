@@ -8,7 +8,7 @@ import torchvision
 
 def get_cifar_lables(cifar_dir, dataset='cifar10'):
     do_download = True
-    fn = dataset + '_testset_lables.txt'
+    fn = dataset + '_testset_labels.txt'
     fp = open(fn, 'w')
     fp.write('idx\tlabel\n')
 
