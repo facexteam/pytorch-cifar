@@ -24,6 +24,8 @@ import torchvision.transforms as transforms
 
 from models import *
 
+from verification_eval.eval_roc_and_pr import eval_roc_and_pr
+
 
 def add_arg_parser():
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -41,22 +43,32 @@ def add_arg_parser():
                         help='workers to load test data')
     parser.add_argument('--cifar-dir', type=str, default='./data',
                         help='path to save downloaded cifar dataset')
-    parser.add_argument('--save-dir', type=str, default='./rlt-features',
-                        help='path to save features')
+    parser.add_argument('--save-dir', type=str, default='./rlt-features-verif',
+                        help='path to save features and verification results')
     parser.add_argument('--dataset', type=str, default='cifar10',
                         help='name of dataset')
+    parser.add_argument('--save-features', type=int, default=0,
+                        help='whether to save features or not')
+    parser.add_argument('--pairs-file', type=str, default='',
+                        help='pairs file')
     return parser
 
 
 def main():
     parser = add_arg_parser()
     args = parser.parse_args()
+    pairs_filepairs = args.pairs_file
 
     dataset_name = args.dataset.lower()
     n_classes = 10
 
+    if not pairs_file:
+        pairs_file = './test_list/cifar100_test_pairs-same9990-diff9990_real_idx.txt'
+
     if dataset_name == 'cifar100':
         n_classes = 100
+        if not pairs_file:
+            pairs_file = './test_list/cifar100_test_pairs-same9900-diff9900_real_idx.txt'
 
     if 10000 % args.test_bs != 0:
         print("===> Must have: (10000 %% args.test_bs == 0)")
@@ -347,19 +359,23 @@ def main():
     total_features = np.vstack(total_features)
     print('===> total_features.shape=', total_features.shape)
 
-    save_fn = args.dataset + '_features.npy'
-    save_fn = osp.join(args.save_dir, save_fn)
-    np.save(save_fn, total_features)
+    eval_roc_and_pr(total_features, pairs_file, args.save_dir)
+
+    if args.save_features:
+        save_fn = args.dataset + '_features.npy'
+        save_fn = osp.join(args.save_dir, save_fn)
+        np.save(save_fn, total_features)
 
 
 if __name__ == '__main__':
-    augments = [
-        '--net', 'resnet20_cifar10_nofc',
-        '--test-bs', '20',
-        '--test-dw', '4',
-        '--checkpoint', './res20-cifar-best.t7',
-        '--cifar-dir', './data',
-        '--dataset', 'cifar10'
-    ]
-    sys.argv.extend(augments)
+    # augments = [
+    #     '--net', 'resnet20_cifar10_nofc',
+    #     '--test-bs', '20',
+    #     '--test-dw', '4',
+    #     '--checkpoint', './res20-cifar-best.t7',
+    #     '--cifar-dir', './data',
+    #     '--dataset', 'cifar10',
+    # ]
+
+    # sys.argv.extend(augments)
     main()
