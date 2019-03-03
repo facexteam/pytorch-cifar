@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-default_num_threshs = 2000
+default_num_threshs = 200
 default_threshs = np.linspace(0, 1, default_num_threshs, endpoint=False)
 
 fname_pr = "pr_curve_%d_threshs.txt" % default_num_threshs
@@ -85,14 +85,14 @@ def calc_roc(same_pairs_sim_list, diff_pairs_sim_list, threshs=None, save_dir='.
 
     print "Finished Processing same pairs"
 
-    print "Processing diff paris"
+    print "Processing diff pairs"
     for score in diff_pairs_sim_list:
         for i in range(num_threshs):
             if score < threshs[i]:
                 tn[i] += 1
             else:
                 fp[i] += 1
-    print "Finished Processing diff paris"
+    print "Finished Processing diff pairs"
 
     recall = tp / (tp + fn)
     fpr = fp / (tn + fp)
@@ -182,7 +182,7 @@ def calc_presicion_recall(tp, fn, tn, fp, threshs=None, save_dir='./'):
 
 #     print "Finished Processing same pairs"
 
-#     print "Processing diff paris"
+#     print "Processing diff pairs"
 #     with open(diff_pairs_result_file, 'r') as fp_sim:
 #         for line in fp_sim:
 #             img1_fn, img2_fn, score = line.split('\t')
@@ -193,7 +193,7 @@ def calc_presicion_recall(tp, fn, tn, fp, threshs=None, save_dir='./'):
 #                     tn[i] += 1
 #                 else:
 #                     fp[i] += 1
-#     print "Finished Processing diff paris"
+#     print "Finished Processing diff pairs"
 
 #     recall = tp / (tp + fn)
 #     precision = tp / (tp + fp)

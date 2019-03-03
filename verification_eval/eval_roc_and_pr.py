@@ -24,12 +24,13 @@ def calc_similarity(all_ftr_mat, pairs_idx_list, distance_type='cosine'):
 
 
 def load_image_pairs(pairs_fn):
+    cnt = 0
     same_pairs_idx_list = []
     diff_pairs_idx_list = []
 
     idx_lists = [diff_pairs_idx_list, same_pairs_idx_list]
 
-    fp = open(pairs_fn, 'w')
+    fp = open(pairs_fn, 'r')
     for line in fp:
         splits = line.strip().split()
         idx1 = int(splits[0])
@@ -37,7 +38,14 @@ def load_image_pairs(pairs_fn):
         label = int(splits[2])
 
         idx_lists[label].append((idx1, idx2))
+        cnt += 1
 
+#         print(same_pairs_idx_list)
+#         print(diff_pairs_idx_list)
+#         if cnt == 10:
+#             break
+
+    fp.close()
     return same_pairs_idx_list, diff_pairs_idx_list
 
 
@@ -68,7 +76,7 @@ def eval_roc_and_pr(ftr_mat, pairs_file, save_dir):
 
     for (i, sim) in enumerate(diff_sim_list):
         fp_diff.write("%s %s %f\n" %
-                      (diff_sim_list[i][0], diff_sim_list[i][1], sim))
+                      (diff_pairs_idx_list[i][0], diff_pairs_idx_list[i][1], sim))
     fp_diff.close()
 
     threshs = None

@@ -8,10 +8,13 @@ import os
 import os.path as osp
 import argparse
 import time
+import sys
 # import json
 
+from collections import OrderedDict
+
 import numpy as np
-import sys
+from numpy.linalg import norm
 
 import torch
 import torch.nn as nn
@@ -57,13 +60,13 @@ def add_arg_parser():
 def main():
     parser = add_arg_parser()
     args = parser.parse_args()
-    pairs_filepairs = args.pairs_file
+    pairs_file = args.pairs_file
 
     dataset_name = args.dataset.lower()
     n_classes = 10
 
     if not pairs_file:
-        pairs_file = './test_list/cifar100_test_pairs-same9990-diff9990_real_idx.txt'
+        pairs_file = './test_list/cifar10_test_pairs-same9990-diff9990_real_idx.txt'
 
     if dataset_name == 'cifar100':
         n_classes = 100
@@ -228,7 +231,7 @@ def main():
     #     net = LargeMarginModule_cosface(
     #         net, n_classes, args.loss_scale, args.loss_m)
 
-    print('\n===> net params: ', net)
+    #print('\n===> net params: ', net)
 
     if device.startswith('cuda'):
         if len(gpu_ids) > 1:
@@ -318,11 +321,26 @@ def main():
 
     if checkpoint:
         print('===> loaded checkpoint:')
-        # print(type(checkpoint['net'])) # OrderedDict
-        # print(len(checkpoint['net']))
-        checkpoint['net'].pop('linear.weight')
-        checkpoint['net'].pop('linear.bias')
-        # print(len(checkpoint['net']))
+        print(type(checkpoint['net'])) # OrderedDict
+        print(len(checkpoint['net']))
+        print(checkpoint['net'].keys())
+        emb_prefix = 'embedding_net.'
+
+        if emb_prefix in checkpoint['net'].keys()[0]:
+            new_net = OrderedDict()
+            pos = len(emb_prefix)
+            for key in checkpoint['net'].keys():
+		if key.startswith(emb_prefix):
+                    new_net[key[pos:]] = checkpoint['net'][key]
+            
+            checkpoint['net'] = new_net
+
+        if 'linear.weight' in checkpoint['net'].keys():
+            checkpoint['net'].pop('linear.weight')
+        if 'linear.bias' in checkpoint['net'].keys():
+            checkpoint['net'].pop('linear.bias')
+        print(len(checkpoint['net']))
+        print(checkpoint['net'].keys())
 
         # print(checkpoint['net'])
         net.load_state_dict(checkpoint['net'])
@@ -351,6 +369,11 @@ def main():
             features = net(inputs)
             print('features.shape=', features.shape)
             # print('features:\n', features)
+
+            features = features.cpu().numpy()
+            ftr_norm = norm(features, axis=1)
+            ftr_norm = ftr_norm.reshape((-1,1))
+            features = features / ftr_norm
 
             total_features.append(features)
             # if batch_idx+1 == 10:
