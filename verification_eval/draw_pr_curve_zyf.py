@@ -1,5 +1,4 @@
-i#!/usr/bin/env python
-import matplotlib.pyplot as plt
+#!/usr/bin/env python
 import numpy as np
 import numpy as np
 import os.path as osp
@@ -7,6 +6,7 @@ import os
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 default_num_threshs = 200
 default_threshs = np.linspace(0, 1, default_num_threshs, endpoint=False)
@@ -248,6 +248,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
 
     print "Draw PR curve"
     plt.figure(1)
+    plt.clf()
     plt.plot(recall, precision)
 
     plt.xlim((0, 1.0))
@@ -261,12 +262,13 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     plt.grid(color='r', linestyle='--', linewidth=1)
     plt.show()
     plt.savefig(osp.join(save_dir, fname_pr_img))
-    plot.close(1)
+    plt.close(1)
 
     fpr = fp / (fp + tn)
 
     print "Draw ROC curve"
     plt.figure(2)
+    plt.clf()
     plt.plot(fpr, recall)
 
     plt.xlim((0, 1.0))
@@ -280,7 +282,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     plt.grid(which='both', color='r', linestyle='--', linewidth=1)
     plt.show()
     plt.savefig(osp.join(save_dir, fname_roc_img))
-    plot.close(2)
+    plt.close(2)
 
     if draw_balanced_pr:
         balance_ratio = float(tn[0] + fp[0]) / (tp[0] + fn[0])
@@ -305,6 +307,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
 
         print "Draw balanced PR curve"
         plt.figure(3)
+        plt.clf()
         plt.plot(recall, balanced_precision)
 
         plt.xlim((0, 1.0))
@@ -320,7 +323,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
 
         plt.savefig(osp.join(save_dir, fname_balanced_pr_img))
 
-        plot.close(3)
+        plt.close(3)
 
 
 if __name__ == "__main__":
