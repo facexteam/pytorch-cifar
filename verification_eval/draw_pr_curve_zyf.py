@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy as np
 import os.path as osp
@@ -7,6 +6,7 @@ import os
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 default_num_threshs = 200
 default_threshs = np.linspace(0, 1, default_num_threshs, endpoint=False)
@@ -372,6 +372,7 @@ def draw_all_curves_on_analysis_figure(roc_data, save_suffix='_all', save_dir='.
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.grid(color='r', linestyle='--', linewidth=1)
+    plt.legend(legend_list, loc='upper right')
     plt.show()
     plt.savefig(osp.join(save_dir, fname_pr_img[0:-4]+save_suffix+'.png'))
     plt.close(1)
@@ -391,6 +392,7 @@ def draw_all_curves_on_analysis_figure(roc_data, save_suffix='_all', save_dir='.
     plt.xlabel('FPR')
     plt.ylabel('Recall')
     plt.grid(which='both', color='r', linestyle='--', linewidth=1)
+    plt.legend(legend_list, loc='upper right')
     plt.show()
     plt.savefig(osp.join(save_dir, fname_roc_img[0:-4]+save_suffix+'.png'))
     plt.close(2)
@@ -427,6 +429,7 @@ def draw_all_curves_on_analysis_figure(roc_data, save_suffix='_all', save_dir='.
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.grid(which='both', color='r', linestyle='--', linewidth=1)
+        plt.legend(legend_list, loc='upper right')
         plt.show()
 
         plt.savefig(

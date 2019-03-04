@@ -29,6 +29,7 @@ def draw_all_curves_together(root_dir, num_threshs):
     datasets = ['cifar10', 'cifar100']
 
     for dataset in datasets:
+        roc_data_list = []
         for fn in sub_dirs:
             sub_dir = osp.join(root_dir, fn)
             print('===> process sub dir:', sub_dir)
@@ -52,8 +53,10 @@ def draw_all_curves_together(root_dir, num_threshs):
                             'legend': legend
                         }
 
-                        draw_all_curves_on_analysis_figure(
-                            roc_data, '_all_'+dataset, save_dir=root_dir)
+                        roc_data_list.append(roc_data)
+
+        draw_all_curves_on_analysis_figure(
+            roc_data_list, '_all_'+dataset, save_dir=root_dir)
 
 
 if __name__ == '__main__':
@@ -61,4 +64,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print('===> input args: ', args)
 
-    redraw_curves(args.root_dir, args.num_threshs)
+    draw_all_curves_together(args.root_dir, args.num_threshs)
+
