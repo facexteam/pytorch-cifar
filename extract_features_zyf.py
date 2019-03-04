@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Train CIFAR10 with PyTorch.
 # based on: https://github.com/kuangliu/pytorch-cifar
-# maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
+# extract_featurestainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
 from __future__ import print_function
 import os
@@ -48,9 +48,9 @@ def add_arg_parser():
     return parser
 
 
-def main():
+def extract_features(args_list):
     parser = add_arg_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
 
     dataset_name = args.dataset.lower()
     n_classes = 10
@@ -352,14 +352,17 @@ def main():
     np.save(save_fn, total_features)
 
 
-if __name__ == '__main__':
-    augments = [
-        '--net', 'resnet20_cifar10_nofc',
-        '--test-bs', '20',
-        '--test-dw', '4',
-        '--checkpoint', './res20-cifar-best.t7',
-        '--cifar-dir', './data',
-        '--dataset', 'cifar10'
-    ]
-    sys.argv.extend(augments)
-    main()
+if __name__ == '__extract_features__':
+    if len(sys.argv) > 1:
+        args_list = sys.argv[1:]
+    else:
+        args_list = [
+            '--net', 'resnet20_cifar10_nofc',
+            '--test-bs', '20',
+            '--test-dw', '4',
+            '--checkpoint', './res20-cifar-best.t7',
+            '--cifar-dir', './data',
+            '--dataset', 'cifar10'
+        ]
+
+    extract_features(args_list)

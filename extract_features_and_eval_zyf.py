@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Train CIFAR10 with PyTorch.
 # based on: https://github.com/kuangliu/pytorch-cifar
-# maintainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
+# extract_features_and_evaltainer: zhaoyafei (https://github.com/walkoncross, zhaoyafei0210@gmail.com)
 
 from __future__ import print_function
 import os
@@ -57,9 +57,9 @@ def add_arg_parser():
     return parser
 
 
-def main():
+def extract_features_and_eval(args_list):
     parser = add_arg_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
     pairs_file = args.pairs_file
 
     dataset_name = args.dataset.lower()
@@ -322,7 +322,7 @@ def main():
 
     if checkpoint:
         print('===> loaded checkpoint:')
-        print(type(checkpoint['net'])) # OrderedDict
+        print(type(checkpoint['net']))  # OrderedDict
         print(len(checkpoint['net']))
         # print(checkpoint['net'].keys())
 
@@ -337,13 +337,13 @@ def main():
             new_net = OrderedDict()
             pos = len(emb_prefix)
             for key in checkpoint['net'].keys():
-		if key.startswith(emb_prefix):
+                if key.startswith(emb_prefix):
                     new_net[key[pos:]] = checkpoint['net'][key]
-            
+
             checkpoint['net'] = new_net
 
         print(len(checkpoint['net']))
-        #print(checkpoint['net'].keys())
+        # print(checkpoint['net'].keys())
 
         # print(checkpoint['net'])
         net.load_state_dict(checkpoint['net'])
@@ -375,7 +375,7 @@ def main():
 
             features = features.cpu().numpy()
             ftr_norm = norm(features, axis=1) + 1e-8
-            ftr_norm = ftr_norm.reshape((-1,1))
+            ftr_norm = ftr_norm.reshape((-1, 1))
             features = features / ftr_norm
             #print('feature norm', ftr_norm)
 
@@ -394,15 +394,17 @@ def main():
         np.save(save_fn, total_features)
 
 
-if __name__ == '__main__':
-    # augments = [
-    #     '--net', 'resnet20_cifar10_nofc',
-    #     '--test-bs', '20',
-    #     '--test-dw', '4',
-    #     '--checkpoint', './res20-cifar-best.t7',
-    #     '--cifar-dir', './data',
-    #     '--dataset', 'cifar10',
-    # ]
+if __name__ == '__extract_features_and_eval__':
+    if len(sys.argv) > 1:
+        args_list = sys.argv[1:]
+    else:
+        args_list = [
+            '--net', 'resnet20_cifar10_nofc',
+            '--test-bs', '20',
+            '--test-dw', '4',
+            '--checkpoint', './res20-cifar-best.t7',
+            '--cifar-dir', './data',
+            '--dataset', 'cifar10',
+        ]
 
-    # sys.argv.extend(augments)
-    main()
+    extract_features_and_eval(args_list)
