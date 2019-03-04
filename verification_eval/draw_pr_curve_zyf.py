@@ -250,6 +250,9 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     plt.figure(1)
     plt.plot(recall, precision)
 
+    plt.xlim((0, 1.0))
+    plt.ylim((0, 1.0))
+
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.yticks(np.arange(0, 1.1, 0.1))
     plt.title('Precision vs. Recall Curve')
@@ -264,6 +267,9 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     print "Draw ROC curve"
     plt.figure(2)
     plt.plot(fpr, recall)
+
+    plt.xlim((0, 1.0))
+    plt.ylim((0, 1.0))
 
     plt.xticks(np.arange(0, 1.1, 0.1))
     plt.yticks(np.arange(0, 1.1, 0.1))
@@ -298,6 +304,9 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
         print "Draw balanced PR curve"
         plt.figure(3)
         plt.plot(recall, balanced_precision)
+
+        plt.xlim((0, 1.0))
+        plt.ylim((0, 1.0))
 
         plt.xticks(np.arange(0, 1.1, 0.1))
         plt.yticks(np.arange(0, 1.1, 0.1))
