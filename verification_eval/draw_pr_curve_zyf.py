@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+i#!/usr/bin/env python
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy as np
 import os.path as osp
@@ -6,7 +7,6 @@ import os
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 default_num_threshs = 200
 default_threshs = np.linspace(0, 1, default_num_threshs, endpoint=False)
@@ -261,6 +261,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     plt.grid(color='r', linestyle='--', linewidth=1)
     plt.show()
     plt.savefig(osp.join(save_dir, fname_pr_img))
+    plot.close(1)
 
     fpr = fp / (fp + tn)
 
@@ -279,6 +280,7 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
     plt.grid(which='both', color='r', linestyle='--', linewidth=1)
     plt.show()
     plt.savefig(osp.join(save_dir, fname_roc_img))
+    plot.close(2)
 
     if draw_balanced_pr:
         balance_ratio = float(tn[0] + fp[0]) / (tp[0] + fn[0])
@@ -318,6 +320,8 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
 
         plt.savefig(osp.join(save_dir, fname_balanced_pr_img))
 
+        plot.close(3)
+
 
 if __name__ == "__main__":
 
@@ -333,3 +337,4 @@ if __name__ == "__main__":
             same_pairs_result_file, diff_pairs_result_file, save_dir=save_dir)
 
     draw_analysis_figure(tp, fn, tn, fp, save_dir=save_dir)
+

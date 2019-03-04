@@ -352,7 +352,7 @@ def extract_features(args_list):
     np.save(save_fn, total_features)
 
 
-if __name__ == '__extract_features__':
+if __name__ == '__main__':
     if len(sys.argv) > 1:
         args_list = sys.argv[1:]
     else:
