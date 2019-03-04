@@ -63,15 +63,16 @@ def main():
     pairs_file = args.pairs_file
 
     dataset_name = args.dataset.lower()
-    n_classes = 10
-
-    if not pairs_file:
-        pairs_file = './test_list/cifar10_test_pairs-same9990-diff9990_real_idx.txt'
 
     if dataset_name == 'cifar100':
         n_classes = 100
         if not pairs_file:
             pairs_file = './test_list/cifar100_test_pairs-same9900-diff9900_real_idx.txt'
+    else:
+        n_classes = 10
+
+        if not pairs_file:
+            pairs_file = './test_list/cifar10_test_pairs-same9990-diff9990_real_idx.txt'
 
     if 10000 % args.test_bs != 0:
         print("===> Must have: (10000 %% args.test_bs == 0)")
@@ -323,7 +324,13 @@ def main():
         print('===> loaded checkpoint:')
         print(type(checkpoint['net'])) # OrderedDict
         print(len(checkpoint['net']))
-        print(checkpoint['net'].keys())
+        # print(checkpoint['net'].keys())
+
+        if 'linear.weight' in checkpoint['net'].keys():
+            checkpoint['net'].pop('linear.weight')
+        if 'linear.bias' in checkpoint['net'].keys():
+            checkpoint['net'].pop('linear.bias')
+
         emb_prefix = 'embedding_net.'
 
         if emb_prefix in checkpoint['net'].keys()[0]:
@@ -335,12 +342,8 @@ def main():
             
             checkpoint['net'] = new_net
 
-        if 'linear.weight' in checkpoint['net'].keys():
-            checkpoint['net'].pop('linear.weight')
-        if 'linear.bias' in checkpoint['net'].keys():
-            checkpoint['net'].pop('linear.bias')
         print(len(checkpoint['net']))
-        print(checkpoint['net'].keys())
+        #print(checkpoint['net'].keys())
 
         # print(checkpoint['net'])
         net.load_state_dict(checkpoint['net'])
@@ -371,9 +374,10 @@ def main():
             # print('features:\n', features)
 
             features = features.cpu().numpy()
-            ftr_norm = norm(features, axis=1)
+            ftr_norm = norm(features, axis=1) + 1e-8
             ftr_norm = ftr_norm.reshape((-1,1))
             features = features / ftr_norm
+            #print('feature norm', ftr_norm)
 
             total_features.append(features)
             # if batch_idx+1 == 10:

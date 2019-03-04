@@ -6,6 +6,9 @@ import os
 import os.path as osp
 
 
+from numpy.linalg import norm
+
+
 def calc_similarity(all_ftr_mat, pairs_idx_list, distance_type='cosine'):
     print "Calc similarities of pairs"
 
@@ -18,6 +21,15 @@ def calc_similarity(all_ftr_mat, pairs_idx_list, distance_type='cosine'):
     else:
         for idx_pair in pairs_idx_list:
             sim = np.dot(all_ftr_mat[idx_pair[0]], all_ftr_mat[idx_pair[1]])
+            # print('===> In calc_similarity:')
+            # print('all_ftr_mat[%d]:\n' % idx_pair[0], all_ftr_mat[idx_pair[0]])
+            # print('all_ftr_mat[%d]:\n' % idx_pair[1], all_ftr_mat[idx_pair[1]])
+            # print('norm of all_ftr_mat[%d]:\n' % idx_pair[0], norm(
+            #     all_ftr_mat[idx_pair[0]]))
+            # print('norm of all_ftr_mat[%d]:\n' % idx_pair[1], norm(
+            #     all_ftr_mat[idx_pair[1]]))
+            # print('sim=', sim)
+
             sim_list.append(sim)
 
     return sim_list
@@ -65,7 +77,7 @@ def eval_roc_and_pr(ftr_mat, pairs_file, save_dir):
     fp_same = open(fn_same, 'w')
 
     for (i, sim) in enumerate(same_sim_list):
-        fp_same.write("%s %s %f\n" %
+        fp_same.write("%s %s %g\n" %
                       (same_pairs_idx_list[i][0], same_pairs_idx_list[i][1], sim))
     fp_same.close()
 
@@ -75,7 +87,7 @@ def eval_roc_and_pr(ftr_mat, pairs_file, save_dir):
     fp_diff = open(fn_diff, 'w')
 
     for (i, sim) in enumerate(diff_sim_list):
-        fp_diff.write("%s %s %f\n" %
+        fp_diff.write("%s %s %g\n" %
                       (diff_pairs_idx_list[i][0], diff_pairs_idx_list[i][1], sim))
     fp_diff.close()
 
