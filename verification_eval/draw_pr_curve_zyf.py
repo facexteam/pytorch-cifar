@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy as np
 import os.path as osp
@@ -6,7 +7,6 @@ import os
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 default_num_threshs = 200
 default_threshs = np.linspace(0, 1, default_num_threshs, endpoint=False)
@@ -326,6 +326,115 @@ def draw_analysis_figure(tp, fn, tn, fp, save_dir='./', draw_balanced_pr=False):
         plt.close(3)
 
 
+def draw_all_curves_on_analysis_figure(roc_data, save_suffix='_all', save_dir='./', draw_balanced_pr=False):
+    if not osp.exists(save_dir):
+        os.makedirs(save_dir)
+
+    recall_list = []
+    precision_list = []
+    balanced_precision_list = []
+    fpr_list = []
+    legend_list = []
+
+    for item in roc_data:
+        tp = item['tp']
+        fp = item['fp']
+        tn = item['tn']
+        fn = item['fn']
+
+        recall = tp / (tp + fn)
+        precision = tp / (tp + fp)
+        fpr = fp / (fp + tn)
+
+        recall_list.append(recall)
+        precision_list.append(precision)
+        fpr_list.append(fpr)
+
+        balance_ratio = float(tn[0] + fp[0]) / (tp[0] + fn[0])
+        print 'balance_ratio: ', balance_ratio
+        balanced_precision = tp / (tp + fp / balance_ratio)
+        balanced_precision_list.append(balanced_precision)
+
+        legend_list.append(item['legend'])
+
+    print "Draw PR curve"
+    plt.figure(1)
+    plt.clf()
+    for i in range(len(recall_list)):
+        plt.plot(recall_list[i], precision_list[i])
+
+    plt.xlim((0, 1.0))
+    plt.ylim((0, 1.0))
+
+    plt.xticks(np.arange(0, 1.1, 0.1))
+    plt.yticks(np.arange(0, 1.1, 0.1))
+    plt.title('Precision vs. Recall Curve')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.grid(color='r', linestyle='--', linewidth=1)
+    plt.show()
+    plt.savefig(osp.join(save_dir, fname_pr_img[0:-4]+save_suffix+'.png'))
+    plt.close(1)
+
+    print "Draw ROC curve"
+    plt.figure(2)
+    plt.clf()
+    for i in range(len(recall_list)):
+        plt.plot(fpr_list[i], recall_list[i])
+
+    plt.xlim((0, 1.0))
+    plt.ylim((0, 1.0))
+
+    plt.xticks(np.arange(0, 1.1, 0.1))
+    plt.yticks(np.arange(0, 1.1, 0.1))
+    plt.title('TPR(recall) vs. FPR Curve')
+    plt.xlabel('FPR')
+    plt.ylabel('Recall')
+    plt.grid(which='both', color='r', linestyle='--', linewidth=1)
+    plt.show()
+    plt.savefig(osp.join(save_dir, fname_roc_img[0:-4]+save_suffix+'.png'))
+    plt.close(2)
+
+    if draw_balanced_pr:
+        #    fp_pr = open(fname_balanced_pr, "w")
+        #
+        #    fp_pr.write("thresh\t presicion\t recall\n")
+        #    for i in range(num_threshs):
+        #        fp_pr.write("%f\t %f\t %f\n" % (threshs[i], balanced_precision[i], recall[i]))
+        #
+        #    fp_pr.close()
+
+        #    fp_roc = open(fname_roc, "w")
+        #
+        #    fp_roc.write("thresh\t tp\t fn\t tn\t fp\t tpr\t \tfpr\n")
+        #    for i in range(num_threshs):
+        #        fp_roc.write("%f\t %d\t %d\t %d\t %d\t %f\t %f\n" % (threshs[i], tp[i], fn[i], tn[i], fp[i], recall[i], fpr[i]))
+        #
+        #    fp_roc.close()
+
+        print "Draw balanced PR curve"
+        plt.figure(3)
+        plt.clf()
+        for i in range(len(recall_list)):
+            plt.plot(recall_list[i], balanced_precision_list[i])
+
+        plt.xlim((0, 1.0))
+        plt.ylim((0, 1.0))
+
+        plt.xticks(np.arange(0, 1.1, 0.1))
+        plt.yticks(np.arange(0, 1.1, 0.1))
+        plt.title('Balanced-Precision vs. Recall Curve')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.grid(which='both', color='r', linestyle='--', linewidth=1)
+        plt.show()
+
+        plt.savefig(
+            osp.join(save_dir, fname_balanced_pr_img[0:-4]+save_suffix+'.png'))
+
+        plt.close(3)
+
+
 if __name__ == "__main__":
 
     same_pairs_result_file = "samefacesim.txt"
@@ -340,4 +449,3 @@ if __name__ == "__main__":
             same_pairs_result_file, diff_pairs_result_file, save_dir=save_dir)
 
     draw_analysis_figure(tp, fn, tn, fp, save_dir=save_dir)
-
