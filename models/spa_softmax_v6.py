@@ -49,7 +49,7 @@ class SpaSoftmax_v6(nn.Module):
         # print('---> weight[j].norm (before norm):\n',
         #       self.linear.weight.norm(dim=1))
 
-        print('---> targets:\n', targets)
+        # print('---> targets:\n', targets)
 
         # do L2 normalization
         embedding = F.normalize(embedding, dim=1)
@@ -66,14 +66,14 @@ class SpaSoftmax_v6(nn.Module):
 
         theta = cos_theta.acos() / np.pi
         theta = theta.clamp(0, 1)
-        print('---> theta:\n', theta*180)
+        # print('---> theta:\n', theta*180)
 
         if self.n > 1.0+eps or self.n < 1.0-eps:
             theta_1 = theta.pow(self.n)
         else:
             theta_1 = theta
 
-        print('---> theta_1:\n', theta_1*180)
+        # print('---> theta_1:\n', theta_1*180)
 
         #print(self.m > eps and self.m < self.n-eps)
         if self.m > eps and self.m < self.n-eps:
@@ -86,19 +86,19 @@ class SpaSoftmax_v6(nn.Module):
             one_hot_comp = torch.ones_like(cos_theta) - one_hot
 
             theta_2 = theta.pow(self.m)
-            print('---> theta_2:\n', theta_2*180)
+            # print('---> theta_2:\n', theta_2*180)
 
             theta_3 = torch.mul(theta_1, one_hot_comp) + \
                 torch.mul(theta_2, one_hot)
 
-            print('---> biased_theta:\n', theta_3*180)
+            # print('---> biased_theta:\n', theta_3*180)
 
             output = (1.0 - theta_3) * self.scale
 
-            print('---> output (s*(1-biased_norm_theta)):\n', output)
-            print(
-                '---> output[j].norm (s*(1-biased_theta)):\n',
-                output.norm(dim=1))
+            # print('---> output (s*(1-biased_norm_theta)):\n', output)
+            # print(
+            #     '---> output[j].norm (s*(1-biased_theta)):\n',
+            # output.norm(dim=1))
         else:
             output = (1.0 - theta_1) * self.scale
 
@@ -136,8 +136,7 @@ if __name__ == '__main__':
     emb_size = 20
     output_size = 10
     scale = 8
-    m_n_list = [(0.8, 1), (0.9, 1.2)]
-    # m_n_list = [(0.33, 1), (0.5, 1), (0.67, 1), (0.8, 1), (0.9, 1)]
+    m_n_list = [(0.33, 1), (0.5, 1), (0.67, 1), (0.8, 1), (0.9, 1)]
     # m_n_list = [(1, 1.25), (1, 1.5), (1, 2), (1, 2.5), (1, 3)]
     # m_n_list = [(0.33, 3), (0.5, 2), (0.67, 1.5), (0.8, 1.25), ]
     # m_n_list = [(0.33, 1), (0.5, 1), (0.67, 1), (0.8, 1), (0.9, 1),
@@ -164,3 +163,4 @@ if __name__ == '__main__':
         print('net:\n', net)
 
         infer(net, dummpy_data, dummpy_targets)
+

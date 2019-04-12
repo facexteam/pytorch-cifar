@@ -246,3 +246,4 @@ if __name__ == '__main__':
     print('net:\n', net)
 
     infer(net, dummpy_data, dummpy_targets)
+
