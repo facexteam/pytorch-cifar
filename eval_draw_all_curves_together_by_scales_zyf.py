@@ -33,7 +33,8 @@ def draw_all_curves_together_by_scales(root_dir, scales, num_threshs):
     scales = scales.strip().split(',')
 
     for s in scales:
-        key = '-s'+s
+    #for s in ['1']:
+        key = '-s%s-' % s
         for dataset in datasets:
             roc_data_list = []
             for fn in sub_dirs:
@@ -41,7 +42,7 @@ def draw_all_curves_together_by_scales(root_dir, scales, num_threshs):
                 print('===> process sub dir:', sub_dir)
 
                 if osp.isdir(sub_dir) and key in fn:
-                    pos1 = fn.find('-s')
+                    pos1 = fn.rfind('-s')
                     pos2 = fn.find('-', pos1+6)
                     legend = fn[pos1+1:pos2]
 

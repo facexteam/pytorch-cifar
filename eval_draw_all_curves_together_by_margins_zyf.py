@@ -18,7 +18,7 @@ def add_arg_parser():
                         type=str, help='root dir to all sub model dirs')
     parser.add_argument('--num-threshs', default=200,
                         type=int, help='number of threshs for ROC')
-    parser.add_argument('--margins', default='0.1,0.2,0.3,0.5,0.8',
+    parser.add_argument('--margins', default='0,0.1,0.2,0.3,0.5,0.8',
                         type=str, help='margins')
 
     return parser
@@ -33,7 +33,7 @@ def draw_all_curves_together_by_margins(root_dir, margins, num_threshs):
     margins = margins.strip().split(',')
 
     for m in margins:
-        key = '-m'+m
+        key = '-m%s-' % m
         for dataset in datasets:
             roc_data_list = []
             for fn in sub_dirs:
@@ -41,7 +41,7 @@ def draw_all_curves_together_by_margins(root_dir, margins, num_threshs):
                 print('===> process sub dir:', sub_dir)
 
                 if osp.isdir(sub_dir) and key in fn:
-                    pos1 = fn.find('-s')
+                    pos1 = fn.rfind('-s')
                     pos2 = fn.find('-', pos1+6)
                     legend = fn[pos1+1:pos2]
 
